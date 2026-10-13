@@ -1,0 +1,148 @@
+name: RDP
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'   # TEST: every 5 minutes
+
+jobs:
+  secure-rdp:
+    runs-on: windows-latest
+    timeout-minutes: 3600
+
+    steps:
+      - name: Configure Core RDP Settings
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
+                           -Name "fDenyTSConnections" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
+                           -Name "UserAuthentication" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
+                           -Name "SecurityLayer" -Value 0 -Force
+
+          # Auto-login: skip password screen, go straight to desktop
+          $winlogon = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+          Set-ItemProperty -Path $winlogon -Name "AutoAdminLogon"   -Value "1"    -Force
+          Set-ItemProperty -Path $winlogon -Name "DefaultUserName"   -Value "RDP"  -Force
+          Set-ItemProperty -Path $winlogon -Name "DefaultPassword"   -Value "rakib123" -Force
+          Set-ItemProperty -Path $winlogon -Name "DefaultDomainName" -Value "."    -Force
+
+          netsh advfirewall firewall delete rule name="RDP-Tailscale" 2>$null
+          netsh advfirewall firewall add rule name="RDP-Tailscale" `
+            dir=in action=allow protocol=TCP localport=3389
+
+          Restart-Service -Name TermService -Force
+
+      - name: Create RDP User
+        run: |
+          # Disable password complexity so rakib123 is accepted
+          $cfgFile = "$env:TEMP\secpol.cfg"
+          secedit /export /cfg $cfgFile | Out-Null
+          (Get-Content $cfgFile) -replace 'PasswordComplexity = 1', 'PasswordComplexity = 0' | Set-Content $cfgFile
+          secedit /configure /db "$env:TEMP\secedit.sdb" /cfg $cfgFile /quiet | Out-Null
+
+          $password = "rakib123"
+          $securePass = ConvertTo-SecureString $password -AsPlainText -Force
+
+          # Remove existing user if re-running
+          if (Get-LocalUser -Name "RDP" -ErrorAction SilentlyContinue) {
+              Remove-LocalUser -Name "RDP"
+          }
+
+          New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
+          Add-LocalGroupMember -Group "Administrators" -Member "RDP"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
+
+          echo "RDP_PASS=$password" >> $env:GITHUB_ENV
+
+          if (-not (Get-LocalUser -Name "RDP" -ErrorAction SilentlyContinue)) {
+              Write-Error "User creation failed"
+              exit 1
+          }
+
+      - name: Install Tailscale
+        run: |
+          # Fetch latest stable Tailscale version dynamically
+          $page = (Invoke-WebRequest 'https://pkgs.tailscale.com/stable/' -UseBasicParsing).Content
+          $tsVersion = ([regex]::Matches($page, 'tailscale-setup-([\d.]+)-amd64\.msi') | Select-Object -Last 1).Groups[1].Value
+          Write-Host "Installing Tailscale $tsVersion"
+          $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-${tsVersion}-amd64.msi"
+          $installerPath = "$env:TEMP\tailscale.msi"
+          Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
+          Start-Process msiexec.exe -ArgumentList "/i", "`"$installerPath`"", "/quiet", "/norestart" -Wait
+          Remove-Item $installerPath -Force
+
+      - name: Connect Tailscale (Auto, No Browser)
+        env:
+          TS_AUTHKEY: tskey-auth-k5mNYiTx3M11CNTRL-zwVcX2qgHF9j91kxnxUAF9TKz3zKPEFL
+        run: |
+          $tsBin = "$env:ProgramFiles\Tailscale\tailscale.exe"
+
+          & $tsBin up `
+            --auth-key="$env:TS_AUTHKEY" `
+            --hostname="gh-rdp-$env:GITHUB_RUN_ID" `
+            --accept-routes `
+            --reset
+
+          # Wait for IP assignment
+          $tsIP = $null
+          $retries = 0
+          while (-not $tsIP -and $retries -lt 20) {
+              Start-Sleep -Seconds 5
+              $tsIP = (& $tsBin ip -4 2>$null | Select-Object -First 1)
+              $retries++
+          }
+
+          if (-not $tsIP) {
+              Write-Error "Tailscale IP not assigned. Key might be expired."
+              exit 1
+          }
+
+          echo "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
+
+      - name: Verify RDP Port
+        run: |
+          $testResult = Test-NetConnection -ComputerName $env:TAILSCALE_IP -Port 3389
+          if (-not $testResult.TcpTestSucceeded) {
+              Write-Error "RDP port 3389 not reachable on $env:TAILSCALE_IP"
+              exit 1
+          }
+
+      - name: System Specs
+        run: |
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "         GITHUB RUNNER SPECS"
+          Write-Host "=========================================="
+          $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+          Write-Host "  CPU      : $($cpu.Name.Trim())"
+          Write-Host "  Cores    : $($cpu.NumberOfCores) cores / $($cpu.NumberOfLogicalProcessors) threads"
+          $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 2)
+          Write-Host "  RAM      : $ramGB GB"
+          $disk = Get-PSDrive C | Select-Object Used, Free
+          $usedGB  = [math]::Round($disk.Used  / 1GB, 1)
+          $freeGB  = [math]::Round($disk.Free  / 1GB, 1)
+          $totalGB = [math]::Round(($disk.Used + $disk.Free) / 1GB, 1)
+          Write-Host "  Disk (C) : $totalGB GB total | $usedGB GB used | $freeGB GB free"
+          $os = (Get-CimInstance Win32_OperatingSystem).Caption
+          Write-Host "  OS       : $os"
+          Write-Host "=========================================="
+
+      - name: Maintain Session (Keep Alive)
+        run: |
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "           RDP SESSION READY"
+          Write-Host "=========================================="
+          Write-Host "  Address  : $env:TAILSCALE_IP"
+          Write-Host "  Username : RDP"
+          Write-Host "  Password : $env:RDP_PASS"
+          Write-Host "=========================================="
+          Write-Host ""
+
+          while ($true) {
+              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — connect via RDP to $env:TAILSCALE_IP"
+              Start-Sleep -Seconds 300
+          }
+
+
