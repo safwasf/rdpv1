@@ -2,13 +2,14 @@ name: RDP
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'   # TEST: every 5 minutes
+
+permissions:
+  actions: write
 
 jobs:
   secure-rdp:
     runs-on: windows-latest
-    timeout-minutes: 3600
+    timeout-minutes: 360
 
     steps:
       - name: Configure Core RDP Settings
@@ -129,6 +130,11 @@ jobs:
           Write-Host "=========================================="
 
       - name: Maintain Session (Keep Alive)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          WORKFLOW: main.yml
+          REF: ${{ github.ref_name }}
         run: |
           Write-Host ""
           Write-Host "=========================================="
@@ -140,9 +146,27 @@ jobs:
           Write-Host "=========================================="
           Write-Host ""
 
-          while ($true) {
-              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — connect via RDP to $env:TAILSCALE_IP"
+          # Run for 5 hours (18000 seconds), then self-trigger new run
+          $deadline = (Get-Date).AddHours(5)
+          while ((Get-Date) -lt $deadline) {
+              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — RDP: $env:TAILSCALE_IP | restarting in $([math]::Round(($deadline - (Get-Date)).TotalMinutes)) min"
               Start-Sleep -Seconds 300
           }
+
+          # Trigger new workflow run before this one exits
+          Write-Host "[$(Get-Date -Format 'HH:mm:ss')] 5h reached — triggering new workflow run..."
+          $headers = @{
+              Authorization  = "Bearer $env:GITHUB_TOKEN"
+              Accept         = "application/vnd.github+json"
+              "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $body = @{ ref = $env:REF } | ConvertTo-Json
+          Invoke-RestMethod `
+            -Uri "https://api.github.com/repos/$env:REPO/actions/workflows/$env:WORKFLOW/dispatches" `
+            -Method POST `
+            -Headers $headers `
+            -Body $body `
+            -ContentType "application/json"
+          Write-Host "[+] New workflow triggered. This session ending."
 
 
