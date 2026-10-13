@@ -1,0 +1,12 @@
+{
+  "name": "github-actions-tailscale-runner-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vercel-ready GitHub Actions + Tailscale dashboard with live running-runner cards",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

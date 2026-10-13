@@ -1,86 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GitHub Actions Control Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Actions + Tailscale · Running Runner Cards</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:        #0d1117;
-      --surface:   #161b22;
-      --surface2:  #21262d;
-      --border:    #30363d;
-      --text:      #e6edf3;
-      --muted:     #8b949e;
-      --green:     #3fb950;
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
       --green-dim: #0d2818;
-      --red:       #f85149;
-      --red-dim:   #2d0f0f;
-      --blue:      #388bfd;
-      --blue-dim:  #0d1f3c;
-      --yellow:    #e3b341;
-      --yellow-dim:#2d2200;
-      --accent:    #58a6ff;
-      --radius:    10px;
+      --red: #f85149;
+      --red-dim: #2d0f0f;
+      --blue: #388bfd;
+      --blue-dim: #0d1f3c;
+      --yellow: #e3b341;
+      --yellow-dim: #2d2200;
+      --accent: #58a6ff;
+      --radius: 10px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    button, input, select { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* Header */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; }
-    .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #388bfd, #58a6ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .pill { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--muted); }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 14px; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; white-space: nowrap; }
+    .logo-icon { width: 32px; height: 32px; flex: 0 0 32px; background: linear-gradient(135deg, #388bfd, #58a6ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+    .pill { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--muted); white-space: nowrap; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.8); } }
 
     /* Layout */
     .layout { display: flex; flex: 1; min-height: calc(100vh - 58px); }
     .sidebar { width: 210px; background: var(--surface); border-right: 1px solid var(--border); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
     .sl { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 10px 10px 4px; }
-    .nav { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--muted); border: none; background: none; text-align: left; width: 100%; transition: all .12s; }
+    .nav { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--muted); border: none; background: none; text-align: left; width: 100%; white-space: nowrap; transition: background .12s, color .12s; }
     .nav:hover { background: var(--surface2); color: var(--text); }
     .nav.active { background: var(--blue-dim); color: var(--accent); }
-    .main { flex: 1; padding: 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+    .nav-section { width: 100%; }
+    .main { flex: 1; min-width: 0; padding: 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+    #tab-dashboard, #tab-tokens, #tab-tailscale, #tab-runners { width: 100%; flex-direction: column; gap: 18px; }
 
     /* Cards */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .ch { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-width: 0; }
+    .ch { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .ct { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
     .cb { padding: 18px; }
 
     /* Stats */
-    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-    .sc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .sc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; min-width: 0; }
     .sl2 { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
-    .sv { font-size: 26px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .sv { font-size: 26px; font-weight: 700; font-family: 'JetBrains Mono', monospace; overflow-wrap: anywhere; }
     .sv.g { color: var(--green); } .sv.r { color: var(--red); } .sv.b { color: var(--blue); } .sv.m { color: var(--muted); }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all .12s; font-family: 'Inter', sans-serif; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: filter .12s, border-color .12s, color .12s; font-family: 'Inter', sans-serif; white-space: nowrap; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-g  { background: var(--green);  color: #000; } .btn-g:hover:not(:disabled)  { filter: brightness(1.12); }
-    .btn-r  { background: var(--red);    color: #fff; } .btn-r:hover:not(:disabled)  { filter: brightness(1.12); }
-    .btn-b  { background: var(--blue);   color: #fff; } .btn-b:hover:not(:disabled)  { filter: brightness(1.12); }
-    .btn-y  { background: var(--yellow); color: #000; } .btn-y:hover:not(:disabled)  { filter: brightness(1.1); }
+    .btn-g { background: var(--green); color: #000; } .btn-g:hover:not(:disabled) { filter: brightness(1.12); }
+    .btn-r { background: var(--red); color: #fff; } .btn-r:hover:not(:disabled) { filter: brightness(1.12); }
+    .btn-b { background: var(--blue); color: #fff; } .btn-b:hover:not(:disabled) { filter: brightness(1.12); }
+    .btn-y { background: var(--yellow); color: #000; } .btn-y:hover:not(:disabled) { filter: brightness(1.1); }
     .btn-gh { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
     .btn-gh:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
     /* Table */
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead th { padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 720px; }
+    thead th { padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--surface2); }
@@ -88,551 +85,1841 @@
     .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 
     /* Badges */
-    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-    .bg  { background: var(--green-dim);  color: var(--green); }
-    .br  { background: var(--red-dim);    color: var(--red); }
-    .by  { background: var(--yellow-dim); color: var(--yellow); }
-    .bb  { background: var(--blue-dim);   color: var(--blue); }
-    .bm  { background: var(--surface2);   color: var(--muted); }
-    .bd  { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .bg { background: var(--green-dim); color: var(--green); }
+    .br { background: var(--red-dim); color: var(--red); }
+    .by { background: var(--yellow-dim); color: var(--yellow); }
+    .bb { background: var(--blue-dim); color: var(--blue); }
+    .bm { background: var(--surface2); color: var(--muted); }
+    .bd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 6px; }
     .spin { animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Form */
-    .fg { margin-bottom: 14px; }
+    /* Forms */
+    .fg { margin-bottom: 14px; min-width: 0; }
     .fl { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; display: block; }
-    .fi {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      padding: 8px 12px; color: var(--text); font-size: 13px; font-family: 'JetBrains Mono', monospace;
-      outline: none; transition: border-color .12s;
-    }
+    .fi { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 13px; font-family: 'JetBrains Mono', monospace; outline: none; transition: border-color .12s; min-width: 0; }
     .fi:focus { border-color: var(--accent); }
-    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .frow3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .frow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+    .frow3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .help-text { color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .notice { border: 1px solid var(--yellow); background: var(--yellow-dim); color: var(--text); border-radius: 7px; padding: 10px 12px; font-size: 12px; line-height: 1.55; margin-bottom: 14px; }
 
-    /* Repos list in sidebar */
-    .repo-tag {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 10px; border-radius: 5px; font-size: 12px;
-      color: var(--muted); cursor: pointer; background: none; border: none; width: 100%; text-align: left;
-      transition: all .12s;
-    }
+    /* Repository list in sidebar */
+    .repo-tag { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 5px; font-size: 12px; color: var(--muted); cursor: pointer; background: none; border: none; width: 100%; text-align: left; transition: background .12s, color .12s; overflow-wrap: anywhere; }
     .repo-tag:hover { background: var(--surface2); color: var(--text); }
     .repo-tag.active { background: var(--blue-dim); color: var(--accent); }
     .repo-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
     /* Modal */
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; align-items: center; justify-content: center; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
     .overlay.show { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; width: 520px; max-width: 95vw; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; width: 520px; max-width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; }
     .modal h2 { font-size: 17px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 
     /* Toast */
-    #toast {
-      position: fixed; bottom: 22px; right: 22px;
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-      padding: 11px 16px; font-size: 13px; display: flex; align-items: center; gap: 9px;
-      opacity: 0; transform: translateY(8px); transition: all .22s; z-index: 999; max-width: 300px;
-    }
+    #toast { position: fixed; bottom: 22px; right: 22px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 11px 16px; font-size: 13px; display: flex; align-items: center; gap: 9px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: all .22s; z-index: 999; max-width: min(420px, calc(100vw - 32px)); overflow-wrap: anywhere; }
     #toast.show { opacity: 1; transform: translateY(0); }
-
-    /* Spinner */
     .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    .ts-credentials { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: end; }
+    .ts-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .ts-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 18px; flex-wrap: wrap; }
+    .ts-search { flex: 1 1 280px; min-width: 180px; }
+    .ts-filter { width: auto; min-width: 155px; font-family: Inter, sans-serif; }
+    .ts-status { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .ts-menu { position: relative; display: inline-block; }
+    .ts-menu summary { list-style: none; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; background: var(--surface2); color: var(--text); font-size: 17px; line-height: 1; user-select: none; }
+    .ts-menu summary::-webkit-details-marker { display: none; }
+    .ts-menu[open] summary { border-color: var(--accent); }
+    .ts-menu-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 205px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.45); padding: 5px; }
+    .ts-menu-pop button { display: block; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 9px 10px; color: var(--text); cursor: pointer; font-size: 12px; white-space: nowrap; }
+    .ts-menu-pop button:hover { background: var(--surface2); }
+    .ts-menu-pop button.danger { color: var(--red); }
+    .ts-device-name { font-weight: 600; overflow-wrap: anywhere; }
+    .ts-subtext { color: var(--muted); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }
+    .ts-ip-list { display: flex; flex-direction: column; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .ts-version { line-height: 1.5; font-size: 12px; }
+    .ts-toolbar-label { font-size: 12px; color: var(--muted); }
+    .ts-empty { text-align: center; padding: 30px 16px; color: var(--muted); }
+    .ts-credential-status { margin-top: 8px; min-height: 18px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .btn-small { padding: 6px 10px; font-size: 12px; }
+
+    /* Running runner profile cards */
+    #tab-runners { width: 100%; flex-direction: column; gap: 18px; }
+    .runner-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 18px; }
+    .runner-search { flex: 1 1 260px; min-width: 160px; }
+    .runner-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px; }
+    .runner-card { background: #111820; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; min-width: 0; box-shadow: 0 4px 18px rgba(0,0,0,.12); }
+    .runner-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 15px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(56,139,253,.08), transparent 65%); }
+    .runner-title { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+    .runner-subtitle { color: var(--muted); font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; line-height: 1.5; }
+    .runner-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 13px; }
+    .runner-card-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 20px; background: var(--green-dim); color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .runner-card-status .bd { animation: pulse 1.6s infinite; }
+    .runner-section-title { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 7px; }
+    .runner-spec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .runner-field { border: 1px solid var(--border); border-radius: 7px; background: rgba(255,255,255,.018); padding: 9px 10px; min-width: 0; }
+    .runner-field.wide { grid-column: 1 / -1; }
+    .runner-field-label { color: var(--muted); font-size: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+    .runner-field-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+    .runner-field-value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; min-width: 0; }
+    .runner-field-value.emph { color: var(--accent); }
+    .runner-field-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .runner-mini-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface2); color: var(--text); font-size: 10px; padding: 4px 7px; cursor: pointer; white-space: nowrap; }
+    .runner-mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .runner-mini-btn:disabled { opacity: .5; cursor: wait; }
+    .runner-card-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 11px; }
+    .runner-alive { border: 1px solid rgba(63,185,80,.28); background: rgba(63,185,80,.06); border-radius: 7px; padding: 10px; }
+    .runner-alive .runner-field-value { color: var(--green); }
+    .runner-log-details { border-top: 1px solid var(--border); padding-top: 10px; }
+    .runner-log-details summary { cursor: pointer; color: var(--muted); font-size: 11px; user-select: none; }
+    .runner-log-pre { margin-top: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #0b0f14; color: #c9d1d9; font: 11px/1.5 'JetBrains Mono', monospace; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .runner-empty { grid-column: 1 / -1; text-align: center; padding: 38px 18px; color: var(--muted); }
+    .runner-inline-status { margin-top: 8px; min-height: 18px; font-size: 12px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+    .runner-key-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+    .runner-count { color: var(--green); font-weight: 700; }
+    @media (max-width: 1100px) { .runner-grid { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 520px) { .runner-grid { padding: 10px; gap: 10px; } .runner-card-head { padding: 12px; } .runner-card-body { padding: 12px; } .runner-spec-grid { grid-template-columns: minmax(0, 1fr); } .runner-field.wide { grid-column: auto; } .runner-key-row { grid-template-columns: minmax(0,1fr); } .runner-key-row .btn { width: 100%; } }
 
     @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .stats { grid-template-columns: 1fr 1fr; }
-      .frow, .frow3 { grid-template-columns: 1fr; }
+      .ts-credentials { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .ts-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .ts-stats .sc { padding: 12px; }
+      .ts-stats .sv { font-size: 21px; }
+      .ts-toolbar { padding: 12px; }
+    }
+
+
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .main { padding: 16px; }
+    }
+    @media (max-width: 768px) {
+      header { padding: 10px 12px; align-items: flex-start; }
+      .logo { font-size: 15px; }
+      .header-right { gap: 6px; }
+      .header-right .pill { order: 2; width: 100%; justify-content: center; }
+      .header-right .btn { padding: 6px 9px !important; font-size: 11px !important; }
+      .layout { flex-direction: column; min-height: calc(100vh - 58px); }
+      .sidebar { width: 100%; padding: 8px; flex-direction: row; align-items: center; gap: 6px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .sidebar > .sl, #repo-list, .sidebar > div[style*="margin-top:auto"] { display: none; }
+      .nav-section { display: flex; align-items: center; gap: 6px; width: auto; }
+      .nav-section .sl { display: none; }
+      .nav { width: auto; }
+      .main { padding: 12px; gap: 12px; }
+      .sc { padding: 12px; }
+      .sv { font-size: 22px; }
+      .frow, .frow3 { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .modal { padding: 18px; }
+      .actions .btn { flex: 1 1 auto; }
+      .ch { padding: 12px; }
+      .cb { padding: 12px; }
+    }
+    @media (max-width: 420px) {
+      .stats { gap: 8px; }
+      .sl2 { font-size: 10px; }
+      .sv { font-size: 20px; }
+      .logo-icon { width: 28px; height: 28px; flex-basis: 28px; }
+      .header-right .pill { font-size: 11px; }
     }
   </style>
 </head>
 <body>
-
-<!-- Header -->
-<header>
-  <div class="logo">
-    <div class="logo-icon">⚡</div>
-    Actions Control
-  </div>
-  <div class="header-right">
-    <div class="pill">
-      <div class="dot"></div>
-      <span id="refresh-label">Refreshing in 15s</span>
+  <!-- Header -->
+  <header>
+    <div class="logo"><div class="logo-icon" aria-hidden="true">⚡</div>Actions + Tailscale</div>
+    <div class="header-right">
+      <div class="pill"><div class="dot" aria-hidden="true"></div><span id="refresh-label">Refresh in 15s</span></div>
+      <button class="btn btn-gh" id="header-add-repo" style="padding:6px 12px;font-size:12px">＋ Add Repo</button>
+      <button class="btn btn-gh" id="header-settings" style="padding:6px 12px;font-size:12px" aria-label="Settings" title="Settings">⚙️</button>
     </div>
-    <button class="btn btn-gh" style="padding:6px 12px;font-size:12px" onclick="showAddRepo()">＋ Add Repo</button>
-    <button class="btn btn-gh" style="padding:6px 12px;font-size:12px" onclick="showSettings()">⚙️</button>
-  </div>
-</header>
+  </header>
 
-<div class="layout">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sl">Repos</div>
-    <div id="repo-list"></div>
-    <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);margin-top:16px">
-      <button class="nav" onclick="showAddRepo()">＋ Add Repository</button>
-    </div>
-  </aside>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="Sidebar navigation">
+      <div class="sl">Repos</div>
+      <div id="repo-list"></div>
+      <div class="sidebar-add" style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);margin-top:16px">
+        <button class="nav" id="sidebar-add-repo">＋ Add Repository</button>
+      </div>
+      <div class="nav-section">
+        <div class="sl" style="margin-top:16px">Views</div>
+        <button class="nav active" id="nav-dash" data-tab="dashboard">📊 Dashboard</button>
+        <button class="nav" id="nav-tok" data-tab="tokens">🔑 Tokens &amp; Repos</button>
+        <button class="nav" id="nav-tailscale" data-tab="tailscale">🌐 Tailscale Machines</button>
+        <button class="nav" id="nav-runners" data-tab="runners">🟢 Running Runners</button>
+      </div>
+    </aside>
 
-  <!-- Main -->
-  <main class="main">
-    <!-- Dashboard tab -->
-    <div id="tab-dashboard">
-      <div class="stats">
-        <div class="sc"><div class="sl2">Active Runs</div><div class="sv g" id="st-active">—</div></div>
-        <div class="sc"><div class="sl2">Total (last 20)</div><div class="sv b" id="st-total">—</div></div>
-        <div class="sc"><div class="sl2">Success</div><div class="sv g" id="st-ok">—</div></div>
-        <div class="sc"><div class="sl2">Failed / Cancelled</div><div class="sv r" id="st-bad">—</div></div>
+    <!-- Main -->
+    <main class="main">
+      <!-- Dashboard tab -->
+      <div id="tab-dashboard">
+        <div class="stats">
+          <div class="sc"><div class="sl2">Active Runs</div><div class="sv g" id="st-active">—</div></div>
+          <div class="sc"><div class="sl2">Total (last 20)</div><div class="sv b" id="st-total">—</div></div>
+          <div class="sc"><div class="sl2">Success</div><div class="sv g" id="st-ok">—</div></div>
+          <div class="sc"><div class="sl2">Failed / Cancelled</div><div class="sv r" id="st-bad">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">⚡ Quick Actions</div><span id="current-repo-label" style="font-size:12px;color:var(--muted);overflow-wrap:anywhere"></span></div>
+          <div class="cb"><div class="actions">
+            <button class="btn btn-g" id="btn-start-run">▶ Start New Run</button>
+            <button class="btn btn-r" id="btn-stop-all">■ Stop All</button>
+            <button class="btn btn-y" id="btn-restart-all">↺ Restart</button>
+            <button class="btn btn-gh" id="btn-refresh">⟳ Refresh</button>
+          </div></div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">📋 Workflow Runs</div><span id="updated-label" style="font-size:12px;color:var(--muted)"></span></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Status</th><th>Run #</th><th>Workflow</th><th>Branch</th><th>Duration</th><th>Age</th><th>Action</th></tr></thead>
+            <tbody id="tbody"><tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)">Add a repository to get started.</td></tr></tbody>
+          </table></div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="ch"><div class="ct">⚡ Quick Actions</div><span id="current-repo-label" style="font-size:12px;color:var(--muted)"></span></div>
-        <div class="cb">
-          <div class="actions">
-            <button class="btn btn-g" onclick="startRun()">▶ Start New Run</button>
-            <button class="btn btn-r" onclick="stopAll()">■ Stop All</button>
-            <button class="btn btn-y" onclick="restartAll()">↺ Restart</button>
-            <button class="btn btn-gh" onclick="fetchRuns()">⟳ Refresh</button>
+      <!-- Tokens tab -->
+      <div id="tab-tokens" style="display:none">
+        <div class="card">
+          <div class="ch"><div class="ct">🔑 Token Management</div></div>
+          <div class="cb">
+            <div class="notice">Security note: GitHub tokens are stored in this browser's localStorage. Anyone with access to this browser profile can potentially read them. Use a token with only the permissions required, and remove/revoke tokens you no longer use.</div>
+            <div id="token-list"></div>
+            <button class="btn btn-b" id="btn-add-token" style="margin-top:4px">＋ Add Token</button>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="ch">
-          <div class="ct">📋 Workflow Runs</div>
-          <span id="updated-label" style="font-size:12px;color:var(--muted)"></span>
-        </div>
-        <div style="overflow-x:auto">
-          <table>
-            <thead><tr><th>Status</th><th>Run #</th><th>Workflow</th><th>Branch</th><th>Duration</th><th>Age</th><th>Action</th></tr></thead>
-            <tbody id="tbody"></tbody>
-          </table>
+        <div class="card">
+          <div class="ch"><div class="ct">📦 Repo Configurations</div></div>
+          <div class="cb" id="repo-config-list"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Tokens tab -->
-    <div id="tab-tokens" style="display:none">
-      <div class="card">
-        <div class="ch"><div class="ct">🔑 Token Management</div></div>
-        <div class="cb">
-          <div id="token-list"></div>
-          <button class="btn btn-b" onclick="showAddToken()" style="margin-top:4px">＋ Add Token</button>
+      <!-- Running runners tab -->
+      <div id="tab-runners" style="display:none">
+        <div class="card">
+          <div class="ch"><div class="ct">🟢 Running Runner Cards</div><span class="help-text" id="runner-updated-label">Not loaded yet</span></div>
+          <div class="cb">
+            <div class="notice">Private output: runner logs may contain RDP credentials. This view keeps the password hidden by default. Only deploy this to a private dashboard URL and set <span class="mono">DASHBOARD_ACCESS_KEY</span> in Vercel Environment Variables. Do not share the access key or this dashboard.</div>
+            <div class="help-text" style="margin-bottom:12px">The app checks every configured repository and lists every workflow run currently marked <span class="mono">in_progress</span>. It reads GitHub Actions logs through the Vercel API routes, extracts CPU/RAM/disk/OS, RDP session details, and the latest alive line. Log fields refresh automatically.</div>
+            <div class="runner-key-row">
+              <div class="fg" style="margin-bottom:0"><label class="fl" for="runner-access-key">Dashboard access key (set on Vercel)</label><input class="fi" id="runner-access-key" type="password" placeholder="Paste DASHBOARD_ACCESS_KEY" autocomplete="current-password" /></div>
+              <button class="btn btn-b" id="btn-runner-load">↻ Load Running Runs</button>
+            </div>
+            <div class="actions" style="margin-top:10px">
+              <button class="btn btn-gh" id="btn-runner-refresh">⟳ Refresh Now</button>
+              <button class="btn btn-gh" id="btn-runner-copy-all">▣ Copy All Runner Info</button>
+              <button class="btn btn-gh" id="btn-runner-forget-key">Forget Access Key</button>
+            </div>
+            <div id="runner-status" class="runner-inline-status" role="status" aria-live="polite">Set the Vercel access key above, then load running runs.</div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="sc"><div class="sl2">Running Now</div><div class="sv g" id="runner-count">—</div></div>
+          <div class="sc"><div class="sl2">Repositories Checked</div><div class="sv b" id="runner-repos-count">—</div></div>
+          <div class="sc"><div class="sl2">Logs Loaded</div><div class="sv m" id="runner-logs-count">—</div></div>
+          <div class="sc"><div class="sl2">Last Update</div><div class="sv m" id="runner-last-age" style="font-size:18px">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">🖥️ Active Runners <span class="runner-count" id="runner-heading-count"></span></div><span class="help-text">Cards update with dashboard auto-refresh</span></div>
+          <div class="runner-toolbar">
+            <input class="fi runner-search" id="runner-search" type="search" placeholder="⌕ Search repo, workflow, branch, IP, username…" aria-label="Search running runner cards" />
+            <button class="btn btn-gh btn-small" id="btn-runner-clear-search">Clear search</button>
+          </div>
+          <div id="runner-grid" class="runner-grid"><div class="runner-empty">No running runners loaded yet. Enter your Vercel access key and click “Load Running Runs”.</div></div>
         </div>
       </div>
-      <div class="card">
-        <div class="ch"><div class="ct">📦 Repo Configurations</div></div>
-        <div class="cb" id="repo-config-list"></div>
-      </div>
-    </div>
-  </main>
-</div>
 
-<!-- Add/Edit Repo Modal -->
-<div class="overlay" id="repo-modal">
-  <div class="modal">
-    <h2>📦 Add Repository</h2>
-    <div class="frow">
-      <div class="fg">
-        <label class="fl">Repository (owner/repo)</label>
-        <input class="fi" id="rm-repo" placeholder="safwasf/rdpv1"/>
+      <!-- Tailscale machines tab -->
+      <div id="tab-tailscale" style="display:none">
+        <div class="card">
+          <div class="ch"><div class="ct">🌐 Tailscale connection</div><span class="help-text">Device list · auto-refresh enabled</span></div>
+          <div class="cb">
+            <div class="notice">Tailscale API credential is stored in this browser's localStorage so it can reconnect after reload. Use a least-privilege credential: <span class="mono">devices:core:read</span> is enough to list machines; management actions require write permissions. Never share this dashboard with an untrusted person.</div>
+            <div class="help-text" style="margin-bottom:12px">Create an API access token in Tailscale Admin → Settings → Keys. Leave Tailnet as <span class="mono">-</span> to use the token’s default tailnet.</div>
+            <div class="ts-credentials">
+              <div class="fg"><label class="fl" for="ts-tailnet">Tailnet (use - for token's default tailnet)</label><input class="fi" id="ts-tailnet" value="-" placeholder="- or example.com" autocomplete="off" /></div>
+              <div class="fg"><label class="fl" for="ts-token">Tailscale API access token</label><input class="fi" id="ts-token" type="password" placeholder="tskey-api-…" autocomplete="new-password" /></div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-b" id="btn-ts-connect">Save &amp; Load Machines</button>
+              <button class="btn btn-gh" id="btn-ts-refresh">⟳ Refresh Now</button>
+              <button class="btn btn-gh" id="btn-ts-clear">Forget Tailscale Token</button>
+            </div>
+            <div id="ts-connection-status" class="ts-credential-status" role="status" aria-live="polite">Enter your Tailscale token to load devices.</div>
+          </div>
+        </div>
+
+        <div class="ts-stats">
+          <div class="sc"><div class="sl2">Machines</div><div class="sv b" id="ts-count-all">—</div></div>
+          <div class="sc"><div class="sl2">Connected</div><div class="sv g" id="ts-count-online">—</div></div>
+          <div class="sc"><div class="sl2">Not connected</div><div class="sv r" id="ts-count-offline">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><div class="ct">🖥️ Machines</div><span id="ts-updated-label" class="help-text">Not loaded yet</span></div>
+          <div class="ts-toolbar">
+            <input class="fi ts-search" id="ts-search" type="search" placeholder="⌕ Search by name, owner, IP, tag, version…" aria-label="Search Tailscale machines" />
+            <select class="fi ts-filter" id="ts-filter" aria-label="Filter Tailscale machines">
+              <option value="all">All machines</option>
+              <option value="connected">Connected</option>
+              <option value="offline">Not connected</option>
+              <option value="key-expiry-disabled">Key expiry disabled</option>
+              <option value="needs-approval">Needs approval</option>
+            </select>
+            <button class="btn btn-gh btn-small" id="btn-ts-export">⇩ Export CSV</button>
+          </div>
+          <div class="table-wrap"><table style="min-width:850px">
+            <thead><tr><th>Machine</th><th>Addresses</th><th>Version</th><th>Last seen</th><th>Actions</th></tr></thead>
+            <tbody id="ts-tbody"><tr><td colspan="5" class="ts-empty">Connect a Tailscale token to show your machines.</td></tr></tbody>
+          </table></div>
+        </div>
       </div>
-      <div class="fg">
-        <label class="fl">Workflow File</label>
-        <input class="fi" id="rm-workflow" placeholder="main.yml"/>
+    </main>
+  </div>
+
+  <!-- Add/Edit Repo Modal -->
+  <div class="overlay" id="repo-modal" role="presentation">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="repo-modal-title">
+      <h2 id="repo-modal-title">📦 Add Repository</h2>
+      <div class="frow">
+        <div class="fg"><label class="fl" for="rm-repo">Repository (owner/repo)</label><input class="fi" id="rm-repo" placeholder="safwasf/rdpv1" autocomplete="off" /></div>
+        <div class="fg"><label class="fl" for="rm-workflow">Workflow File</label><input class="fi" id="rm-workflow" placeholder="main.yml" value="main.yml" autocomplete="off" /></div>
       </div>
-    </div>
-    <div class="frow">
-      <div class="fg">
-        <label class="fl">Branch</label>
-        <input class="fi" id="rm-branch" placeholder="main"/>
+      <div class="frow">
+        <div class="fg"><label class="fl" for="rm-branch">Branch</label><input class="fi" id="rm-branch" placeholder="main" value="main" autocomplete="off" /></div>
+        <div class="fg"><label class="fl" for="rm-token-select">GitHub Token</label><select class="fi" id="rm-token-select" style="font-family:Inter,sans-serif"></select></div>
       </div>
-      <div class="fg">
-        <label class="fl">GitHub Token (select saved)</label>
-        <select class="fi" id="rm-token-select" style="font-family:Inter,sans-serif"></select>
+      <div class="fg"><label class="fl" for="rm-label">Label (display name)</label><input class="fi" id="rm-label" placeholder="My RDP Runner" autocomplete="off" /></div>
+      <div class="actions" style="margin-top:6px">
+        <button class="btn btn-b" id="btn-save-repo" style="flex:1">Save</button>
+        <button class="btn btn-gh" data-close-modal="repo-modal">Cancel</button>
       </div>
-    </div>
-    <div class="fg">
-      <label class="fl">Label (display name)</label>
-      <input class="fi" id="rm-label" placeholder="My RDP Runner"/>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:6px">
-      <button class="btn btn-b" onclick="saveRepo()" style="flex:1">Save</button>
-      <button class="btn btn-gh" onclick="closeModal('repo-modal')">Cancel</button>
     </div>
   </div>
-</div>
 
-<!-- Add Token Modal -->
-<div class="overlay" id="token-modal">
-  <div class="modal">
-    <h2>🔑 Add GitHub Token</h2>
-    <div class="fg">
-      <label class="fl">Token Name (label)</label>
-      <input class="fi" id="tm-name" placeholder="My Main Account"/>
-    </div>
-    <div class="fg">
-      <label class="fl">GitHub Personal Access Token</label>
-      <input class="fi" id="tm-token" type="password" placeholder="ghp_..."/>
-    </div>
-    <div id="tm-verify" style="font-size:12px;margin-top:6px;min-height:20px"></div>
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="btn btn-gh" onclick="verifyTmToken()">✓ Verify</button>
-      <button class="btn btn-b" onclick="saveToken()" style="flex:1">Save Token</button>
-      <button class="btn btn-gh" onclick="closeModal('token-modal')">Cancel</button>
+  <!-- Add Token Modal -->
+  <div class="overlay" id="token-modal" role="presentation">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="token-modal-title">
+      <h2 id="token-modal-title">🔑 Add GitHub Token</h2>
+      <div class="fg"><label class="fl" for="tm-name">Token Name (label)</label><input class="fi" id="tm-name" placeholder="My Main Account" autocomplete="off" /></div>
+      <div class="fg"><label class="fl" for="tm-token">GitHub Personal Access Token</label><input class="fi" id="tm-token" type="password" placeholder="github_pat_... or ghp_..." autocomplete="off" /></div>
+      <div class="help-text" style="margin-bottom:8px">Verify the token before saving. The token must have access to the repository and the Actions permissions needed for the operations you plan to run.</div>
+      <div id="tm-verify" role="status" aria-live="polite" style="font-size:12px;margin-top:6px;min-height:20px"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-gh" id="btn-verify-token">✓ Verify</button>
+        <button class="btn btn-b" id="btn-save-token" style="flex:1">Save Token</button>
+        <button class="btn btn-gh" data-close-modal="token-modal">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Settings Modal -->
-<div class="overlay" id="settings-modal">
-  <div class="modal">
-    <h2>⚙️ Settings</h2>
-    <div class="fg">
-      <label class="fl">Auto-refresh interval (seconds)</label>
-      <input class="fi" id="set-interval" type="number" min="5" max="300" value="15"/>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="btn btn-b" onclick="saveSettings()" style="flex:1">Save</button>
-      <button class="btn btn-r" onclick="clearAll()">Clear All Data</button>
-      <button class="btn btn-gh" onclick="closeModal('settings-modal')">Cancel</button>
+  <!-- Settings Modal -->
+  <div class="overlay" id="settings-modal" role="presentation">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+      <h2 id="settings-modal-title">⚙️ Settings</h2>
+      <div class="fg"><label class="fl" for="set-interval">Auto-refresh interval (seconds, 5–300)</label><input class="fi" id="set-interval" type="number" min="5" max="300" step="1" value="15" /></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-b" id="btn-save-settings" style="flex:1">Save</button>
+        <button class="btn btn-r" id="btn-clear-all">Clear All Data</button>
+        <button class="btn btn-gh" data-close-modal="settings-modal">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
-<script>
-// ── State ────────────────────────────────────────────────────
-let state = { tokens: {}, repos: [], activeRepo: null, settings: { interval: 15 } };
-let refreshTimer = null;
-let countdown = 15;
+  <script>
+    'use strict';
 
-function loadState() {
-  try { state = JSON.parse(localStorage.getItem('gha-dashboard') || '{}'); } catch(e) {}
-  state.tokens   = state.tokens   || {};
-  state.repos    = state.repos    || [];
-  state.settings = state.settings || { interval: 15 };
-  if (state.repos.length === 0) showAddRepo();
-  else { state.activeRepo = state.activeRepo || state.repos[0].id; renderSidebar(); fetchRuns(); startTimer(); }
-}
+    // ── State ────────────────────────────────────────────────────
+    const DEFAULT_INTERVAL = 15;
+    const MIN_INTERVAL = 5;
+    const MAX_INTERVAL = 300;
+    const STORAGE_KEY = 'gha-dashboard';
+    const GH = 'https://api.github.com';
+    let state = { tokens: {}, repos: [], activeRepo: null, settings: { interval: DEFAULT_INTERVAL }, tailscale: { token: '', tailnet: '-' } };
+    let refreshTimer = null;
+    let toastTimer = null;
+    let countdown = DEFAULT_INTERVAL;
+    let editingRepoId = null;
+    let fetchVersion = 0;
+    let isFetchingRuns = false;
 
-function saveState() { localStorage.setItem('gha-dashboard', JSON.stringify(state)); }
+    // Runner cards are loaded from Vercel serverless functions; access key is session-only.
+    const RUNNER_ACCESS_KEY_SESSION = 'gha-dashboard-access-key-session';
+    let runningRunnerRows = [];
+    const runnerLogCache = new Map();
+    const runnerRevealedPasswords = new Set();
+    let isFetchingRunnerRows = false;
+    let runnerLastUpdatedAt = null;
+    const RUNNER_LOG_REFRESH_MS = 30000;
 
-// ── Repos ────────────────────────────────────────────────────
-function getRepo(id) { return state.repos.find(r => r.id === id); }
-function getActiveRepo() { return getRepo(state.activeRepo); }
-function selectRepo(id) { state.activeRepo = id; saveState(); renderSidebar(); fetchRuns(); }
+    function makeId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
 
-function renderSidebar() {
-  const list = document.getElementById('repo-list');
-  list.innerHTML = state.repos.map(r => `
-    <button class="repo-tag ${r.id === state.activeRepo ? 'active' : ''}" onclick="selectRepo('${r.id}')">
-      <span class="repo-dot" style="background:${r.id === state.activeRepo ? 'var(--accent)' : 'var(--muted)'}"></span>
-      ${r.label || r.repo}
-    </button>
-  `).join('');
+    function clampInterval(value) {
+      const n = Number.parseInt(value, 10);
+      if (!Number.isFinite(n)) return DEFAULT_INTERVAL;
+      return Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, n));
+    }
 
-  const repo = getActiveRepo();
-  if (repo) {
-    document.getElementById('current-repo-label').textContent = repo.repo + ' / ' + repo.workflow;
-  }
-}
+    function normalizeState(raw) {
+      const next = { tokens: {}, repos: [], activeRepo: null, settings: { interval: DEFAULT_INTERVAL }, tailscale: { token: '', tailnet: '-' } };
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return next;
 
-function showAddRepo() {
-  document.getElementById('rm-repo').value = '';
-  document.getElementById('rm-workflow').value = 'main.yml';
-  document.getElementById('rm-branch').value = 'main';
-  document.getElementById('rm-label').value = '';
-  populateTokenSelect('rm-token-select');
-  document.getElementById('repo-modal').classList.add('show');
-}
+      if (raw.tokens && typeof raw.tokens === 'object' && !Array.isArray(raw.tokens)) {
+        Object.entries(raw.tokens).forEach(([id, token]) => {
+          if (token && typeof token === 'object' && typeof token.token === 'string' && token.token.trim()) {
+            next.tokens[String(id)] = { name: typeof token.name === 'string' && token.name.trim() ? token.name.trim() : `Token ${id}`, token: token.token.trim() };
+          }
+        });
+      }
 
-function saveRepo() {
-  const repo = {
-    id:       Date.now().toString(),
-    repo:     document.getElementById('rm-repo').value.trim(),
-    workflow: document.getElementById('rm-workflow').value.trim() || 'main.yml',
-    branch:   document.getElementById('rm-branch').value.trim()  || 'main',
-    label:    document.getElementById('rm-label').value.trim(),
-    tokenId:  document.getElementById('rm-token-select').value,
-  };
-  if (!repo.repo) { toast('❌ Repo is required', 'r'); return; }
-  if (!repo.tokenId) { toast('❌ Select a token (add one first)', 'r'); return; }
-  state.repos.push(repo);
-  state.activeRepo = repo.id;
-  saveState();
-  closeModal('repo-modal');
-  renderSidebar();
-  fetchRuns();
-  startTimer();
-  toast('✅ Repo added', 'g');
-}
+      if (Array.isArray(raw.repos)) {
+        next.repos = raw.repos.filter(repo => repo && typeof repo === 'object' && typeof repo.id === 'string' && typeof repo.repo === 'string').map(repo => ({
+          id: repo.id,
+          repo: repo.repo.trim(),
+          workflow: typeof repo.workflow === 'string' && repo.workflow.trim() ? repo.workflow.trim() : 'main.yml',
+          branch: typeof repo.branch === 'string' && repo.branch.trim() ? repo.branch.trim() : 'main',
+          label: typeof repo.label === 'string' ? repo.label : '',
+          tokenId: typeof repo.tokenId === 'string' ? repo.tokenId : ''
+        })).filter(repo => repo.repo);
+      }
 
-// ── Tokens ───────────────────────────────────────────────────
-function populateTokenSelect(elId) {
-  const sel = document.getElementById(elId);
-  const keys = Object.keys(state.tokens);
-  if (keys.length === 0) {
-    sel.innerHTML = '<option value="">— No tokens saved. Add one first. —</option>';
-  } else {
-    sel.innerHTML = keys.map(k => `<option value="${k}">${state.tokens[k].name}</option>`).join('');
-  }
-}
+      if (raw.tailscale && typeof raw.tailscale === 'object' && !Array.isArray(raw.tailscale)) {
+        next.tailscale = {
+          token: typeof raw.tailscale.token === 'string' ? raw.tailscale.token.trim() : '',
+          tailnet: typeof raw.tailscale.tailnet === 'string' && raw.tailscale.tailnet.trim() ? raw.tailscale.tailnet.trim() : '-'
+        };
+      }
 
-function showAddToken() {
-  document.getElementById('tm-name').value = '';
-  document.getElementById('tm-token').value = '';
-  document.getElementById('tm-verify').textContent = '';
-  document.getElementById('token-modal').classList.add('show');
-}
+      next.activeRepo = typeof raw.activeRepo === 'string' ? raw.activeRepo : null;
+      if (raw.settings && typeof raw.settings === 'object') next.settings.interval = clampInterval(raw.settings.interval);
+      if (!next.repos.some(repo => repo.id === next.activeRepo)) next.activeRepo = next.repos[0]?.id || null;
+      return next;
+    }
 
-async function verifyTmToken() {
-  const token = document.getElementById('tm-token').value.trim();
-  if (!token) return;
-  const el = document.getElementById('tm-verify');
-  el.textContent = '⏳ Verifying...';
-  try {
-    const res = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token}` } });
-    const d = await res.json();
-    if (res.ok) { el.innerHTML = `<span style="color:var(--green)">✅ Valid — ${d.login}</span>`; document.getElementById('tm-name').value = document.getElementById('tm-name').value || d.login; }
-    else el.innerHTML = `<span style="color:var(--red)">❌ ${d.message}</span>`;
-  } catch(e) { el.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`; }
-}
+    function loadState() {
+      let raw = null;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        raw = saved ? JSON.parse(saved) : null;
+      } catch (error) {
+        console.error('Could not read saved dashboard state:', error);
+        toast('⚠️ Saved data could not be read. Starting with a clean state.', 'y');
+      }
+      state = normalizeState(raw);
+      const rememberedRunnerKey = sessionStorage.getItem(RUNNER_ACCESS_KEY_SESSION) || '';
+      document.getElementById('runner-access-key').value = rememberedRunnerKey;
+      renderSidebar();
+      document.getElementById('ts-tailnet').value = state.tailscale.tailnet || '-';
+      document.getElementById('ts-token').value = state.tailscale.token || '';
+      if (state.repos.length === 0) {
+        clearDashboard('Add a repository to get started.');
+        // Keep the Tailscale dashboard usable even without a GitHub repository.
+      } else {
+        fetchRuns();
+      }
+      if (state.tailscale.token) fetchTailscaleDevices({ silent: true });
+      startTimer();
+    }
 
-function saveToken() {
-  const id    = Date.now().toString();
-  const name  = document.getElementById('tm-name').value.trim()  || 'Token ' + id;
-  const token = document.getElementById('tm-token').value.trim();
-  if (!token) { toast('❌ Token is required', 'r'); return; }
-  state.tokens[id] = { name, token };
-  saveState();
-  closeModal('token-modal');
-  renderTokenList();
-  toast('✅ Token saved', 'g');
-}
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        return true;
+      } catch (error) {
+        console.error('Could not save dashboard state:', error);
+        toast('❌ Could not save data in browser storage. Check browser storage settings.', 'r');
+        return false;
+      }
+    }
 
-function renderTokenList() {
-  const el = document.getElementById('token-list');
-  const keys = Object.keys(state.tokens);
-  if (keys.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;margin-bottom:14px">No tokens saved yet.</p>'; return; }
-  el.innerHTML = keys.map(k => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500">${state.tokens[k].name}</div>
-        <div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${state.tokens[k].token.slice(0,12)}••••••••</div>
-      </div>
-      <button class="btn btn-r" style="padding:4px 10px;font-size:11px" onclick="deleteToken('${k}')">Delete</button>
-    </div>
-  `).join('');
-}
+    // ── General helpers ──────────────────────────────────────────
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[character]);
+    }
 
-function deleteToken(id) {
-  if (!confirm('Delete this token?')) return;
-  delete state.tokens[id];
-  saveState(); renderTokenList(); toast('🗑️ Token deleted', 'g');
-}
+    function getRepo(id) { return state.repos.find(repo => repo.id === id); }
+    function getActiveRepo() { return getRepo(state.activeRepo); }
 
-function renderRepoConfigList() {
-  const el = document.getElementById('repo-config-list');
-  if (state.repos.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">No repos configured.</p>'; return; }
-  el.innerHTML = state.repos.map(r => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500">${r.label || r.repo}</div>
-        <div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">${r.repo} / ${r.workflow} @ ${r.branch}</div>
-      </div>
-      <button class="btn btn-r" style="padding:4px 10px;font-size:11px" onclick="deleteRepo('${r.id}')">Remove</button>
-    </div>
-  `).join('');
-}
+    function parseRepoSlug(slug) {
+      const parts = String(slug || '').trim().split('/');
+      if (parts.length !== 2 || !parts[0] || !parts[1] || parts.some(part => part === '.' || part === '..' || /[\s?#]/.test(part))) {
+        throw new Error('Repository must be in owner/repo format, with no spaces.');
+      }
+      return `${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}`;
+    }
 
-function deleteRepo(id) {
-  if (!confirm('Remove this repo?')) return;
-  state.repos = state.repos.filter(r => r.id !== id);
-  if (state.activeRepo === id) state.activeRepo = state.repos[0]?.id || null;
-  saveState(); renderSidebar(); renderRepoConfigList(); toast('🗑️ Repo removed', 'g');
-}
+    function repoApiBase(repo) {
+      if (!repo) throw new Error('No repository selected. Add or select a repository first.');
+      return `${GH}/repos/${parseRepoSlug(repo.repo)}`;
+    }
 
-// ── GitHub API ────────────────────────────────────────────────
-const GH = 'https://api.github.com';
-function hdrs(tokenId) {
-  const tok = state.tokens[tokenId]?.token;
-  return { 'Authorization': `Bearer ${tok}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
-}
+    function hdrs(tokenId) {
+      const token = state.tokens[tokenId]?.token;
+      if (!token) throw new Error('This repository has no valid saved token. Add a token or edit the repository settings.');
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      };
+    }
 
-async function fetchRuns() {
-  const repo = getActiveRepo();
-  if (!repo) return;
-  document.getElementById('tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)"><div class="spinner"></div></td></tr>';
-  try {
-    const res = await fetch(`${GH}/repos/${repo.repo}/actions/workflows/${repo.workflow}/runs?per_page=20`, { headers: hdrs(repo.tokenId) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    renderRuns(data.workflow_runs || []);
-    updateStats(data.workflow_runs || []);
-    document.getElementById('updated-label').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  } catch(e) {
-    document.getElementById('tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--red)">${e.message}</td></tr>`;
-    toast('❌ ' + e.message, 'r');
-  }
-}
+    async function githubFetch(url, options = {}) {
+      const response = await fetch(url, options);
+      let data = null;
+      if (response.status !== 204) {
+        const bodyText = await response.text();
+        if (bodyText) {
+          try { data = JSON.parse(bodyText); }
+          catch (_) { data = { message: bodyText }; }
+        }
+      }
+      if (!response.ok) {
+        let message = data && typeof data.message === 'string' ? data.message : `GitHub API request failed (HTTP ${response.status}).`;
+        if (response.status === 401) message = 'GitHub rejected this token (401). Verify the token and save it again.';
+        else if (response.status === 403) message = 'GitHub denied this action (403). Check token permissions, repository access, and API rate limits.';
+        else if (response.status === 404) message = 'Repository or workflow not found (404), or this token cannot access it. Check owner/repo, workflow file, and token permissions.';
+        else if (response.status === 422 && data?.message) message = `GitHub could not process the request: ${data.message}`;
+        throw new Error(message);
+      }
+      return { response, data };
+    }
 
-function renderRuns(runs) {
-  const repo = getActiveRepo();
-  document.getElementById('tbody').innerHTML = runs.length === 0
-    ? '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)">No runs found</td></tr>'
-    : runs.map(r => {
-      const dur = r.run_started_at ? calcDur(r.run_started_at, r.updated_at) : '—';
-      const canCancel = r.status === 'in_progress' || r.status === 'queued';
-      return `<tr>
-        <td>${badge(r.status, r.conclusion)}</td>
-        <td class="mono">#${r.run_number}</td>
-        <td style="color:var(--muted);font-size:12px">${r.name}</td>
-        <td class="mono">${r.head_branch}</td>
-        <td class="mono">${dur}</td>
-        <td style="color:var(--muted);font-size:12px">${timeAgo(r.created_at)}</td>
-        <td>${canCancel
-          ? `<button class="btn btn-r" style="padding:3px 9px;font-size:11px" onclick="cancelRun('${r.id}')">Cancel</button>`
-          : `<button class="btn btn-gh" style="padding:3px 9px;font-size:11px" onclick="rerunThis('${r.id}')">Re-run</button>`}</td>
-      </tr>`;
-    }).join('');
-}
+    function clearDashboard(message = 'No repository selected.') {
+      document.getElementById('tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)">${escapeHtml(message)}</td></tr>`;
+      document.getElementById('current-repo-label').textContent = '';
+      document.getElementById('updated-label').textContent = '';
+      ['st-active', 'st-total', 'st-ok', 'st-bad'].forEach(id => { document.getElementById(id).textContent = '0'; });
+    }
 
-function badge(status, conclusion) {
-  if (status==='in_progress') return `<span class="badge by"><span class="bd spin"></span>Running</span>`;
-  if (status==='queued')      return `<span class="badge bb"><span class="bd"></span>Queued</span>`;
-  if (conclusion==='success') return `<span class="badge bg"><span class="bd"></span>Success</span>`;
-  if (conclusion==='cancelled') return `<span class="badge bm"><span class="bd"></span>Cancelled</span>`;
-  return `<span class="badge br"><span class="bd"></span>${conclusion||status}</span>`;
-}
+    // ── Repositories ────────────────────────────────────────────
+    function selectRepo(id) {
+      if (!getRepo(id)) return;
+      state.activeRepo = id;
+      saveState();
+      renderSidebar();
+      fetchRuns();
+    }
 
-function updateStats(runs) {
-  document.getElementById('st-active').textContent = runs.filter(r=>r.status==='in_progress'||r.status==='queued').length;
-  document.getElementById('st-total').textContent  = runs.length;
-  document.getElementById('st-ok').textContent     = runs.filter(r=>r.conclusion==='success').length;
-  document.getElementById('st-bad').textContent    = runs.filter(r=>r.conclusion==='failure'||r.conclusion==='cancelled').length;
-}
+    function renderSidebar() {
+      const list = document.getElementById('repo-list');
+      list.innerHTML = state.repos.map(repo => `
+        <button type="button" class="repo-tag ${repo.id === state.activeRepo ? 'active' : ''}" data-repo-id="${escapeHtml(repo.id)}" title="${escapeHtml(repo.repo)}">
+          <span class="repo-dot" style="background:${repo.id === state.activeRepo ? 'var(--accent)' : 'var(--muted)'}"></span>
+          <span>${escapeHtml(repo.label || repo.repo)}</span>
+        </button>
+      `).join('');
+      const repo = getActiveRepo();
+      document.getElementById('current-repo-label').textContent = repo ? `${repo.repo} / ${repo.workflow}` : '';
+      if (!repo) clearDashboard('No repository configured. Add a repository to get started.');
+    }
 
-async function startRun() {
-  const repo = getActiveRepo();
-  if (!repo) { toast('❌ No repo selected', 'r'); return; }
-  try {
-    const res = await fetch(`${GH}/repos/${repo.repo}/actions/workflows/${repo.workflow}/dispatches`, {
-      method: 'POST', headers: { ...hdrs(repo.tokenId), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: repo.branch })
+    function showAddRepo() {
+      editingRepoId = null;
+      document.getElementById('repo-modal-title').textContent = '📦 Add Repository';
+      document.getElementById('btn-save-repo').textContent = 'Save';
+      document.getElementById('rm-repo').value = '';
+      document.getElementById('rm-workflow').value = 'main.yml';
+      document.getElementById('rm-branch').value = 'main';
+      document.getElementById('rm-label').value = '';
+      populateTokenSelect('rm-token-select');
+      openModal('repo-modal');
+    }
+
+    function editRepo(id) {
+      const repo = getRepo(id);
+      if (!repo) return;
+      editingRepoId = repo.id;
+      document.getElementById('repo-modal-title').textContent = '📦 Edit Repository';
+      document.getElementById('btn-save-repo').textContent = 'Save Changes';
+      document.getElementById('rm-repo').value = repo.repo;
+      document.getElementById('rm-workflow').value = repo.workflow;
+      document.getElementById('rm-branch').value = repo.branch;
+      document.getElementById('rm-label').value = repo.label;
+      populateTokenSelect('rm-token-select', repo.tokenId);
+      openModal('repo-modal');
+    }
+
+    function saveRepo() {
+      const repoData = {
+        id: editingRepoId || makeId(),
+        repo: document.getElementById('rm-repo').value.trim(),
+        workflow: document.getElementById('rm-workflow').value.trim() || 'main.yml',
+        branch: document.getElementById('rm-branch').value.trim() || 'main',
+        label: document.getElementById('rm-label').value.trim(),
+        tokenId: document.getElementById('rm-token-select').value
+      };
+      try { parseRepoSlug(repoData.repo); }
+      catch (error) { toast(`❌ ${error.message}`, 'r'); return; }
+      if (!repoData.workflow || repoData.workflow.includes('\n')) { toast('❌ Enter a valid workflow file name.', 'r'); return; }
+      if (!repoData.tokenId || !state.tokens[repoData.tokenId]) { toast('❌ Select a saved GitHub token first.', 'r'); return; }
+
+      const duplicate = state.repos.some(repo => repo.id !== repoData.id && repo.repo.toLowerCase() === repoData.repo.toLowerCase() && repo.workflow.toLowerCase() === repoData.workflow.toLowerCase());
+      if (duplicate) { toast('❌ This repository and workflow are already configured.', 'r'); return; }
+
+      if (editingRepoId) {
+        const index = state.repos.findIndex(repo => repo.id === editingRepoId);
+        if (index < 0) { toast('❌ Repository to edit no longer exists.', 'r'); return; }
+        state.repos[index] = repoData;
+      } else {
+        state.repos.push(repoData);
+      }
+      state.activeRepo = repoData.id;
+      if (!saveState()) return;
+      closeModal('repo-modal');
+      renderSidebar();
+      fetchRuns();
+      startTimer();
+      toast(editingRepoId ? '✅ Repository updated.' : '✅ Repository added.', 'g');
+      editingRepoId = null;
+    }
+
+    function populateTokenSelect(elementId, selectedId = '') {
+      const select = document.getElementById(elementId);
+      const keys = Object.keys(state.tokens);
+      if (keys.length === 0) {
+        select.innerHTML = '<option value="">— No tokens saved. Add one first. —</option>';
+        return;
+      }
+      select.innerHTML = '<option value="">— Select a token —</option>' + keys.map(id =>
+        `<option value="${escapeHtml(id)}" ${id === selectedId ? 'selected' : ''}>${escapeHtml(state.tokens[id].name)}</option>`
+      ).join('');
+    }
+
+    function deleteRepo(id) {
+      const repo = getRepo(id);
+      if (!repo) return;
+      if (!confirm(`Remove repository configuration for ${repo.repo} / ${repo.workflow}? This does not delete anything from GitHub.`)) return;
+      state.repos = state.repos.filter(item => item.id !== id);
+      if (state.activeRepo === id) state.activeRepo = state.repos[0]?.id || null;
+      if (!saveState()) return;
+      renderSidebar();
+      renderRepoConfigList();
+      if (state.activeRepo) fetchRuns();
+      else { clearDashboard('No repository configured. Add a repository to get started.'); stopTimer(); }
+      toast('🗑️ Repository configuration removed.', 'g');
+    }
+
+    // ── Tokens ───────────────────────────────────────────────────
+    function showAddToken() {
+      document.getElementById('tm-name').value = '';
+      document.getElementById('tm-token').value = '';
+      document.getElementById('tm-verify').textContent = '';
+      openModal('token-modal');
+      document.getElementById('tm-name').focus();
+    }
+
+    async function verifyTmToken() {
+      const token = document.getElementById('tm-token').value.trim();
+      const output = document.getElementById('tm-verify');
+      if (!token) { output.textContent = 'Enter a token before verifying.'; output.style.color = 'var(--red)'; return false; }
+      output.textContent = '⏳ Verifying token with GitHub…';
+      output.style.color = 'var(--muted)';
+      const button = document.getElementById('btn-verify-token');
+      button.disabled = true;
+      try {
+        const { data } = await githubFetch(`${GH}/user`, { headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        } });
+        const login = typeof data?.login === 'string' ? data.login : 'GitHub user';
+        output.textContent = `✅ Token is valid — ${login}`;
+        output.style.color = 'var(--green)';
+        const nameInput = document.getElementById('tm-name');
+        if (!nameInput.value.trim()) nameInput.value = login;
+        return true;
+      } catch (error) {
+        output.textContent = `❌ ${error.message}`;
+        output.style.color = 'var(--red)';
+        return false;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function saveToken() {
+      const id = makeId();
+      const name = document.getElementById('tm-name').value.trim() || `Token ${Object.keys(state.tokens).length + 1}`;
+      const token = document.getElementById('tm-token').value.trim();
+      if (!token) { toast('❌ Token is required.', 'r'); return; }
+      state.tokens[id] = { name, token };
+      if (!saveState()) { delete state.tokens[id]; return; }
+      closeModal('token-modal');
+      renderTokenList();
+      toast('✅ Token saved in this browser.', 'g');
+    }
+
+    function renderTokenList() {
+      const container = document.getElementById('token-list');
+      const keys = Object.keys(state.tokens);
+      if (keys.length === 0) {
+        container.innerHTML = '<p class="help-text" style="margin-bottom:14px">No tokens saved yet.</p>';
+        return;
+      }
+      container.innerHTML = keys.map(id => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:500;overflow-wrap:anywhere">${escapeHtml(state.tokens[id].name)}</div>
+            <div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">Saved token · ••••••••</div>
+            <div class="help-text">Used by ${state.repos.filter(repo => repo.tokenId === id).length} repository configuration(s)</div>
+          </div>
+          <button type="button" class="btn btn-r" style="padding:4px 10px;font-size:11px" data-action="delete-token" data-id="${escapeHtml(id)}">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteToken(id) {
+      if (!state.tokens[id]) return;
+      const references = state.repos.filter(repo => repo.tokenId === id);
+      if (references.length > 0) {
+        toast(`⚠️ This token is used by ${references.length} repo configuration(s). Edit or remove those repos before deleting it.`, 'y');
+        return;
+      }
+      if (!confirm('Delete this saved token from this browser? This does not revoke it on GitHub.')) return;
+      const old = state.tokens[id];
+      delete state.tokens[id];
+      if (!saveState()) { state.tokens[id] = old; return; }
+      renderTokenList();
+      populateTokenSelect('rm-token-select');
+      toast('🗑️ Token deleted from this browser. Revoke it on GitHub separately if needed.', 'g');
+    }
+
+    function renderRepoConfigList() {
+      const container = document.getElementById('repo-config-list');
+      if (state.repos.length === 0) {
+        container.innerHTML = '<p class="help-text">No repositories configured.</p>';
+        return;
+      }
+      container.innerHTML = state.repos.map(repo => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:500;overflow-wrap:anywhere">${escapeHtml(repo.label || repo.repo)}</div>
+            <div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere">${escapeHtml(repo.repo)} / ${escapeHtml(repo.workflow)} @ ${escapeHtml(repo.branch)}</div>
+            <div class="help-text">Token: ${escapeHtml(state.tokens[repo.tokenId]?.name || 'Missing token')}</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-gh" style="padding:4px 10px;font-size:11px" data-action="edit-repo" data-id="${escapeHtml(repo.id)}">Edit</button>
+            <button type="button" class="btn btn-r" style="padding:4px 10px;font-size:11px" data-action="delete-repo" data-id="${escapeHtml(repo.id)}">Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── GitHub Actions API ───────────────────────────────────────
+    async function fetchRuns() {
+      const repo = getActiveRepo();
+      const version = ++fetchVersion;
+      if (!repo) { clearDashboard(); return; }
+      if (isFetchingRuns) {
+        // A newer request owns the display. The request version prevents old selections overwriting it.
+      }
+      isFetchingRuns = true;
+      document.getElementById('tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)"><span class="spinner" aria-label="Loading"></span></td></tr>';
+      try {
+        const base = repoApiBase(repo);
+        const workflow = encodeURIComponent(repo.workflow);
+        const { data } = await githubFetch(`${base}/actions/workflows/${workflow}/runs?per_page=20`, { headers: hdrs(repo.tokenId) });
+        if (version !== fetchVersion || state.activeRepo !== repo.id) return;
+        const runs = Array.isArray(data?.workflow_runs) ? data.workflow_runs : [];
+        renderRuns(runs);
+        updateStats(runs);
+        document.getElementById('updated-label').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        if (version !== fetchVersion || state.activeRepo !== repo.id) return;
+        document.getElementById('tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--red)">${escapeHtml(error.message)}</td></tr>`;
+        updateStats([]);
+        document.getElementById('updated-label').textContent = 'Update failed';
+        toast(`❌ ${error.message}`, 'r');
+      } finally {
+        if (version === fetchVersion) isFetchingRuns = false;
+      }
+    }
+
+    function renderRuns(runs) {
+      const body = document.getElementById('tbody');
+      if (runs.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)">No runs found for this workflow.</td></tr>';
+        return;
+      }
+      body.innerHTML = runs.map(run => {
+        const started = run.run_started_at;
+        const isActive = run.status === 'in_progress';
+        const duration = started ? calcDur(started, isActive ? new Date().toISOString() : run.updated_at) : '—';
+        const canCancel = run.status === 'in_progress' || run.status === 'queued';
+        const action = canCancel
+          ? `<button type="button" class="btn btn-r" style="padding:3px 9px;font-size:11px" data-action="cancel-run" data-id="${escapeHtml(run.id)}">Cancel</button>`
+          : `<button type="button" class="btn btn-gh" style="padding:3px 9px;font-size:11px" data-action="rerun-run" data-id="${escapeHtml(run.id)}">Re-run</button>`;
+        return `<tr>
+          <td>${badge(run.status, run.conclusion)}</td>
+          <td class="mono">#${escapeHtml(run.run_number)}</td>
+          <td style="color:var(--muted);font-size:12px">${escapeHtml(run.name || 'Unnamed workflow')}</td>
+          <td class="mono">${escapeHtml(run.head_branch || '—')}</td>
+          <td class="mono">${escapeHtml(duration)}</td>
+          <td style="color:var(--muted);font-size:12px">${escapeHtml(timeAgo(run.created_at))}</td>
+          <td>${action}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function badge(status, conclusion) {
+      if (status === 'in_progress') return '<span class="badge by"><span class="bd spin"></span>Running</span>';
+      if (status === 'queued' || status === 'requested' || status === 'waiting') return `<span class="badge bb"><span class="bd"></span>${escapeHtml(status === 'queued' ? 'Queued' : status)}</span>`;
+      if (conclusion === 'success') return '<span class="badge bg"><span class="bd"></span>Success</span>';
+      if (conclusion === 'cancelled') return '<span class="badge bm"><span class="bd"></span>Cancelled</span>';
+      const label = conclusion || status || 'Unknown';
+      return `<span class="badge br"><span class="bd"></span>${escapeHtml(label)}</span>`;
+    }
+
+    function updateStats(runs) {
+      document.getElementById('st-active').textContent = runs.filter(run => ['in_progress', 'queued', 'requested', 'waiting'].includes(run.status)).length;
+      document.getElementById('st-total').textContent = runs.length;
+      document.getElementById('st-ok').textContent = runs.filter(run => run.conclusion === 'success').length;
+      document.getElementById('st-bad').textContent = runs.filter(run => ['failure', 'cancelled', 'timed_out', 'action_required', 'startup_failure', 'stale'].includes(run.conclusion)).length;
+    }
+
+    async function startRun() {
+      const repo = getActiveRepo();
+      if (!repo) { toast('❌ No repository selected.', 'r'); return false; }
+      try {
+        const base = repoApiBase(repo);
+        const workflow = encodeURIComponent(repo.workflow);
+        const { response } = await githubFetch(`${base}/actions/workflows/${workflow}/dispatches`, {
+          method: 'POST',
+          headers: { ...hdrs(repo.tokenId), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ref: repo.branch })
+        });
+        if (response.status !== 204 && !response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
+        toast('✅ Workflow dispatch request accepted.', 'g');
+        if (state.activeRepo === repo.id) setTimeout(() => { if (state.activeRepo === repo.id) fetchRuns(); }, 2000);
+        return true;
+      } catch (error) {
+        toast(`❌ ${error.message}`, 'r');
+        return false;
+      }
+    }
+
+    async function cancelRun(id, options = {}) {
+      const repo = options.repo || getActiveRepo();
+      if (!repo) { if (!options.silent) toast('❌ No repository selected.', 'r'); return false; }
+      try {
+        const base = repoApiBase(repo);
+        await githubFetch(`${base}/actions/runs/${encodeURIComponent(id)}/cancel`, { method: 'POST', headers: hdrs(repo.tokenId) });
+        if (!options.silent) {
+          toast('✅ Cancellation request accepted.', 'g');
+          if (state.activeRepo === repo.id) setTimeout(() => { if (state.activeRepo === repo.id) fetchRuns(); }, 1500);
+        }
+        return true;
+      } catch (error) {
+        if (!options.silent) toast(`❌ ${error.message}`, 'r');
+        throw error;
+      }
+    }
+
+    async function rerunThis(id) {
+      const repo = getActiveRepo();
+      if (!repo) { toast('❌ No repository selected.', 'r'); return false; }
+      try {
+        const base = repoApiBase(repo);
+        await githubFetch(`${base}/actions/runs/${encodeURIComponent(id)}/rerun`, { method: 'POST', headers: hdrs(repo.tokenId) });
+        toast('✅ Re-run request accepted.', 'g');
+        if (state.activeRepo === repo.id) setTimeout(() => { if (state.activeRepo === repo.id) fetchRuns(); }, 2000);
+        return true;
+      } catch (error) {
+        toast(`❌ ${error.message}`, 'r');
+        return false;
+      }
+    }
+
+    async function fetchAllRunsByStatus(repo, status) {
+      const base = repoApiBase(repo);
+      const headers = hdrs(repo.tokenId);
+      const allRuns = [];
+      let page = 1;
+      let totalCount = Infinity;
+      // GitHub's per_page maximum is 100. Page until all returned runs have been read.
+      while (allRuns.length < totalCount) {
+        const { data } = await githubFetch(`${base}/actions/runs?status=${encodeURIComponent(status)}&per_page=100&page=${page}`, { headers });
+        const batch = Array.isArray(data?.workflow_runs) ? data.workflow_runs : [];
+        totalCount = Number.isFinite(data?.total_count) ? data.total_count : batch.length;
+        allRuns.push(...batch);
+        if (batch.length === 0 || allRuns.length >= totalCount) break;
+        page += 1;
+      }
+      return allRuns;
+    }
+
+    async function cancelAllRuns(repo) {
+      const [inProgress, queued] = await Promise.all([
+        fetchAllRunsByStatus(repo, 'in_progress'),
+        fetchAllRunsByStatus(repo, 'queued')
+      ]);
+      const uniqueRuns = [...new Map([...inProgress, ...queued].map(run => [String(run.id), run])).values()];
+      const results = await Promise.allSettled(uniqueRuns.map(run => cancelRun(run.id, { repo, silent: true })));
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        const firstError = failures[0].reason instanceof Error ? failures[0].reason.message : 'One or more runs could not be cancelled.';
+        throw new Error(`${uniqueRuns.length - failures.length}/${uniqueRuns.length} run(s) sent cancellation requests. ${failures.length} failed. ${firstError}`);
+      }
+      return uniqueRuns.length;
+    }
+
+    async function stopAll() {
+      const repo = getActiveRepo();
+      if (!repo) { toast('❌ No repository selected.', 'r'); return false; }
+      if (!confirm(`Stop all queued and running workflows in ${repo.repo}? This applies to every workflow in this repository.`)) return false;
+      const button = document.getElementById('btn-stop-all');
+      button.disabled = true;
+      try {
+        const count = await cancelAllRuns(repo);
+        toast(`✅ Cancellation requested for ${count} run(s).`, 'g');
+        if (state.activeRepo === repo.id) setTimeout(() => { if (state.activeRepo === repo.id) fetchRuns(); }, 1500);
+        return true;
+      } catch (error) {
+        toast(`❌ ${error.message}`, 'r');
+        if (state.activeRepo === repo.id) fetchRuns();
+        return false;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function restartAll() {
+      const repo = getActiveRepo();
+      if (!repo) { toast('❌ No repository selected.', 'r'); return; }
+      if (!confirm(`Cancel all queued and running workflows in ${repo.repo}, then dispatch ${repo.workflow} on branch ${repo.branch}?`)) return;
+      const button = document.getElementById('btn-restart-all');
+      button.disabled = true;
+      try {
+        const count = await cancelAllRuns(repo);
+        toast(`✅ Cancellation requested for ${count} run(s). Starting a new run…`, 'g');
+        // Give GitHub a moment to process cancellations before dispatching the next run.
+        await new Promise(resolve => setTimeout(resolve, 1800));
+        if (state.activeRepo !== repo.id) {
+          toast('⚠️ Repository selection changed; restart was not dispatched.', 'y');
+          return;
+        }
+        await startRun();
+      } catch (error) {
+        // Do not dispatch a replacement run when stopping the existing runs failed.
+        toast(`❌ Restart stopped: ${error.message}`, 'r');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    // ── Tabs ─────────────────────────────────────────────────────
+    function switchTab(name) {
+      if (!['dashboard', 'tokens', 'tailscale', 'runners'].includes(name)) return;
+      ['dashboard', 'tokens', 'tailscale', 'runners'].forEach(tab => {
+        const element = document.getElementById(`tab-${tab}`);
+        element.style.display = tab === name ? 'flex' : 'none';
+      });
+      document.getElementById('nav-dash').classList.toggle('active', name === 'dashboard');
+      document.getElementById('nav-tok').classList.toggle('active', name === 'tokens');
+      document.getElementById('nav-tailscale').classList.toggle('active', name === 'tailscale');
+      document.getElementById('nav-runners').classList.toggle('active', name === 'runners');
+      if (name === 'tokens') { renderTokenList(); renderRepoConfigList(); }
+      if (name === 'tailscale' && state.tailscale.token && !isFetchingTailscale) fetchTailscaleDevices({ silent: true });
+      if (name === 'runners' && getRunnerAccessKey() && !isFetchingRunnerRows) fetchRunningRunners({ silent: true });
+    }
+
+
+    // ── Running runner cards (Vercel API) ─────────────────────────
+    function getRunnerAccessKey() {
+      const inputValue = document.getElementById('runner-access-key')?.value?.trim() || '';
+      if (inputValue) return inputValue;
+      try { return sessionStorage.getItem(RUNNER_ACCESS_KEY_SESSION) || ''; } catch (_) { return ''; }
+    }
+
+    function setRunnerStatus(message, type = 'muted') {
+      const el = document.getElementById('runner-status');
+      el.textContent = message;
+      el.style.color = type === 'good' ? 'var(--green)' : type === 'bad' ? 'var(--red)' : type === 'warn' ? 'var(--yellow)' : 'var(--muted)';
+    }
+
+    function runnerKey(row) { return `${String(row.repoSlug).toLowerCase()}#${row.run.id}`; }
+
+    async function runnerApiFetch(path, repo, body) {
+      const token = state.tokens[repo.tokenId]?.token;
+      if (!token) throw new Error(`No saved GitHub token for ${repo.repo}. Open Tokens & Repos and choose a valid token.`);
+      const accessKey = getRunnerAccessKey();
+      if (!accessKey) throw new Error('Enter the Vercel Dashboard access key first.');
+      const response = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-Dashboard-Key': accessKey
+        },
+        body: JSON.stringify(body),
+        cache: 'no-store'
+      });
+      let data = {};
+      try { data = await response.json(); } catch (_) {}
+      if (!response.ok) {
+        const message = data && typeof data.message === 'string' ? data.message : `Vercel API failed (HTTP ${response.status}).`;
+        if (response.status === 401 && data.code === 'DASHBOARD_AUTH') throw new Error('Dashboard access key is missing or incorrect. Match the DASHBOARD_ACCESS_KEY environment variable in Vercel.');
+        if (response.status === 401) throw new Error('GitHub token was rejected. Verify it in Tokens & Repos.');
+        if (response.status === 403) throw new Error(`GitHub denied access for ${repo.repo}. The token needs Actions read permission. ${message}`);
+        throw new Error(message);
+      }
+      return data;
+    }
+
+    function runnerStatusText(message, isError = false) {
+      return `<div class="runner-empty">${isError ? '⚠️ ' : ''}${escapeHtml(message)}</div>`;
+    }
+
+    async function fetchRunningRunners({ silent = false, forceLogs = false } = {}) {
+      if (isFetchingRunnerRows) return;
+      const accessKey = getRunnerAccessKey();
+      if (!accessKey) {
+        if (!silent) setRunnerStatus('Paste the DASHBOARD_ACCESS_KEY configured in Vercel, then click Load Running Runs.', 'warn');
+        return;
+      }
+      try { sessionStorage.setItem(RUNNER_ACCESS_KEY_SESSION, accessKey); } catch (_) {}
+      if (!state.repos.length) {
+        setRunnerStatus('Add at least one repository in Add Repo. This view checks all saved repositories.', 'warn');
+        document.getElementById('runner-grid').innerHTML = runnerStatusText('No repository configured. Add a repository first.');
+        return;
+      }
+      isFetchingRunnerRows = true;
+      const loadButton = document.getElementById('btn-runner-load');
+      const refreshButton = document.getElementById('btn-runner-refresh');
+      loadButton.disabled = true;
+      refreshButton.disabled = true;
+      if (!silent) setRunnerStatus('Checking all configured repositories for active workflow runs…');
+      const repos = [];
+      const seenRepoTokens = new Set();
+      for (const repo of state.repos) {
+        const dedupeKey = `${repo.repo.toLowerCase()}|${repo.tokenId}`;
+        if (!seenRepoTokens.has(dedupeKey)) { seenRepoTokens.add(dedupeKey); repos.push(repo); }
+      }
+      document.getElementById('runner-repos-count').textContent = String(repos.length);
+      try {
+        const results = await Promise.all(repos.map(async repo => {
+          try {
+            const data = await runnerApiFetch('/api/running-runs', repo, { repo: repo.repo });
+            const workflowRuns = Array.isArray(data.runs) ? data.runs : [];
+            return { repo, runs: workflowRuns.filter(run => run && run.status === 'in_progress'), truncated: Boolean(data.truncated), error: '' };
+          } catch (error) {
+            return { repo, runs: [], error: `${repo.repo}: ${error.message}` };
+          }
+        }));
+        const merged = [];
+        const seenRuns = new Set();
+        const errors = [];
+        const hasTruncatedRepo = results.some(result => result.truncated);
+        for (const result of results) {
+          if (result.error) errors.push(result.error);
+          for (const run of result.runs) {
+            const repoSlug = result.repo.repo;
+            const key = `${repoSlug.toLowerCase()}#${run.id}`;
+            if (seenRuns.has(key)) continue;
+            seenRuns.add(key);
+            merged.push({ repo: result.repo, repoSlug, run });
+          }
+        }
+        merged.sort((a, b) => new Date(b.run.run_started_at || b.run.created_at || 0).getTime() - new Date(a.run.run_started_at || a.run.created_at || 0).getTime());
+        runningRunnerRows = merged;
+        // Drop old log cache only after a run is no longer in progress, but keep password reveal state during refreshes.
+        const liveKeys = new Set(merged.map(runnerKey));
+        for (const key of runnerLogCache.keys()) {
+          const cached = runnerLogCache.get(key);
+          if (!liveKeys.has(key) && cached && Date.now() - (cached.updatedAt || 0) > 120000) runnerLogCache.delete(key);
+        }
+        runnerLastUpdatedAt = new Date();
+        renderRunningRunnerCards();
+        document.getElementById('runner-updated-label').textContent = `Updated ${runnerLastUpdatedAt.toLocaleTimeString()}`;
+        document.getElementById('runner-last-age').textContent = runnerLastUpdatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const errorSuffix = errors.length ? ` ${errors.length} repository error(s): ${errors.slice(0, 3).join(' · ')}` : '';
+        const truncatedSuffix = hasTruncatedRepo ? ' Warning: one repository returned more than 2,000 active runs; list is capped for serverless safety.' : '';
+        setRunnerStatus(`Checked ${repos.length} repository configuration(s) · ${merged.length} running workflow run(s) found.${truncatedSuffix}${errorSuffix}`, (errors.length || hasTruncatedRepo) ? 'warn' : 'good');
+        // Pull logs for new runs or refresh old log snapshots no more often than every 30 seconds.
+        scheduleRunnerLogLoads(merged, forceLogs);
+      } catch (error) {
+        if (!silent) setRunnerStatus(error.message, 'bad');
+        document.getElementById('runner-grid').innerHTML = runnerStatusText(error.message, true);
+      } finally {
+        isFetchingRunnerRows = false;
+        loadButton.disabled = false;
+        refreshButton.disabled = false;
+      }
+    }
+
+    function scheduleRunnerLogLoads(rows, forceLogs) {
+      const pending = rows.filter(row => {
+        const cached = runnerLogCache.get(runnerKey(row));
+        if (cached?.loading) return false;
+        if (forceLogs || !cached || Date.now() - (cached.updatedAt || 0) >= RUNNER_LOG_REFRESH_MS) return true;
+        return false;
+      });
+      if (!pending.length) { updateRunnerSummary(); return; }
+      // Keep request concurrency low; runner archives may be large.
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < pending.length) {
+          const row = pending[cursor++];
+          await fetchRunnerLog(row);
+        }
+      };
+      renderRunningRunnerCards();
+      Promise.all([worker(), worker(), worker()]).catch(() => {}).finally(() => {
+        renderRunningRunnerCards();
+        updateRunnerSummary();
+      });
+    }
+
+    async function fetchRunnerLog(row) {
+      const key = runnerKey(row);
+      const previous = runnerLogCache.get(key);
+      runnerLogCache.set(key, { ...(previous || {}), loading: true, error: '' });
+      renderRunningRunnerCards();
+      try {
+        const data = await runnerApiFetch('/api/run-log', row.repo, { repo: row.repoSlug, runId: Number(row.run.id) });
+        runnerLogCache.set(key, { loading: false, updatedAt: Date.now(), details: data.details || {}, recentLines: data.recentLines || [], error: '' });
+      } catch (error) {
+        runnerLogCache.set(key, { ...(previous || {}), loading: false, updatedAt: Date.now(), error: error.message });
+      }
+      renderRunningRunnerCards();
+    }
+
+    function runnerValue(row, field) {
+      const cache = runnerLogCache.get(runnerKey(row));
+      return cache?.details?.[field] == null || cache.details[field] === '' ? '' : String(cache.details[field]);
+    }
+
+    function runnerFieldMarkup(row, field, label, options = {}) {
+      const key = runnerKey(row);
+      const value = runnerValue(row, field);
+      const revealed = field === 'password' && runnerRevealedPasswords.has(key);
+      const shown = field === 'password' && value && !revealed ? '••••••••••••' : (value || (runnerLogCache.get(key)?.loading ? 'Loading log…' : 'Not found in logs'));
+      const wide = options.wide ? ' wide' : '';
+      const emph = options.emph ? ' emph' : '';
+      let actionButtons = '';
+      if (field === 'password') {
+        actionButtons = `<div class="runner-field-actions"><button type="button" class="runner-mini-btn" data-runner-action="toggle-password" data-key="${escapeHtml(key)}">${revealed ? 'Hide' : 'Show'}</button><button type="button" class="runner-mini-btn" data-runner-action="copy-field" data-key="${escapeHtml(key)}" data-field="password" ${value ? '' : 'disabled'} title="Copy password while hidden or shown">Copy</button></div>`;
+      } else if (value) {
+        actionButtons = `<div class="runner-field-actions"><button type="button" class="runner-mini-btn" data-runner-action="copy-field" data-key="${escapeHtml(key)}" data-field="${escapeHtml(field)}" title="Copy ${escapeHtml(label)}">Copy</button></div>`;
+      }
+      return `<div class="runner-field${wide}"><div class="runner-field-label">${escapeHtml(label)}</div><div class="runner-field-row"><div class="runner-field-value${emph}" title="${escapeHtml(value)}">${escapeHtml(shown)}</div>${actionButtons}</div></div>`;
+    }
+
+    function renderRunningRunnerCards() {
+      const grid = document.getElementById('runner-grid');
+      const query = document.getElementById('runner-search').value.trim().toLowerCase();
+      const visible = runningRunnerRows.filter(row => {
+        const cache = runnerLogCache.get(runnerKey(row));
+        const allText = [row.repoSlug, row.repo.label, row.run.name, row.run.display_title, row.run.head_branch, row.run.run_number,
+          cache?.details?.address, cache?.details?.username, cache?.details?.cpu, cache?.details?.os, cache?.details?.aliveLine].join(' ').toLowerCase();
+        return allText.includes(query);
+      });
+      document.getElementById('runner-heading-count').textContent = `(${visible.length})`;
+      document.getElementById('runner-count').textContent = String(runningRunnerRows.length);
+      document.getElementById('runner-grid').innerHTML = visible.length ? visible.map(row => {
+        const key = runnerKey(row);
+        const safeKey = escapeHtml(key);
+        const run = row.run;
+        const cache = runnerLogCache.get(key) || {};
+        const details = cache.details || {};
+        const url = typeof run.html_url === 'string' ? run.html_url : `https://github.com/${row.repoSlug}/actions/runs/${encodeURIComponent(run.id)}`;
+        const name = run.name || run.display_title || 'GitHub Actions Run';
+        const started = run.run_started_at || run.created_at;
+        const aliveLine = details.aliveLine || '';
+        const loadingText = cache.loading ? '<span class="spinner" aria-label="Loading runner log"></span> Loading runner details…' : '';
+        const errorText = cache.error ? `<div class="help-text" style="color:var(--yellow)">Log unavailable: ${escapeHtml(cache.error)}</div>` : '';
+        const recent = Array.isArray(cache.recentLines) ? cache.recentLines.join('\n') : '';
+        return `<article class="runner-card" data-runner-card="${safeKey}">
+          <div class="runner-card-head">
+            <div style="min-width:0"><div class="runner-title">${escapeHtml(name)}</div><div class="runner-subtitle">${escapeHtml(row.repoSlug)} · #${escapeHtml(run.run_number ?? run.id)} · ${escapeHtml(run.head_branch || 'branch unknown')}<br>Started ${escapeHtml(timeAgo(started))} · Duration ${escapeHtml(calcDur(started, new Date().toISOString()))}<br>Actor: ${escapeHtml(run.actor?.login || 'unknown')} · Event: ${escapeHtml(run.event || 'unknown')}</div></div>
+            <span class="runner-card-status"><span class="bd"></span>RUNNING</span>
+          </div>
+          <div class="runner-card-body">
+            <section><div class="runner-section-title">▤ Runner specifications</div><div class="runner-spec-grid">
+              ${runnerFieldMarkup(row, 'cpu', 'CPU')}
+              ${runnerFieldMarkup(row, 'cores', 'Cores / Threads')}
+              ${runnerFieldMarkup(row, 'ram', 'RAM')}
+              ${runnerFieldMarkup(row, 'disk', 'Disk (C:)')}
+              ${runnerFieldMarkup(row, 'os', 'Operating System', { wide: true })}
+            </div></section>
+            <section><div class="runner-section-title">⌁ RDP session</div><div class="runner-spec-grid">
+              ${runnerFieldMarkup(row, 'address', 'Address / Tailscale IP', { emph: true })}
+              ${runnerFieldMarkup(row, 'username', 'Username')}
+              ${runnerFieldMarkup(row, 'password', 'Password', { wide: true })}
+            </div></section>
+            ${aliveLine ? `<section class="runner-alive"><div class="runner-section-title" style="color:var(--green)"><span class="bd"></span>Latest alive status</div><div class="runner-field-value">${escapeHtml(aliveLine)}</div><div class="runner-field-actions" style="margin-top:7px"><button type="button" class="runner-mini-btn" data-runner-action="copy-alive" data-key="${safeKey}">Copy status line</button></div></section>` : ''}
+            ${loadingText ? `<div class="help-text">${loadingText}</div>` : ''}
+            ${errorText}
+            <div class="runner-card-actions"><a class="btn btn-gh" style="text-decoration:none" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">↗ Open Run</a><button class="btn btn-b" type="button" data-runner-action="copy-card" data-key="${safeKey}">▣ Copy Full Info</button><button class="btn btn-gh" type="button" data-runner-action="refresh-log" data-key="${safeKey}">⟳ Update Log</button></div>
+            ${recent ? `<details class="runner-log-details"><summary>Recent workflow output (password lines hidden)</summary><pre class="runner-log-pre">${escapeHtml(recent)}</pre></details>` : ''}
+          </div>
+        </article>`;
+      }).join('') : (runningRunnerRows.length ? runnerStatusText('No active runner matched your search.') : runnerStatusText('No workflow runs are currently in progress across your configured repositories.'));
+      updateRunnerSummary();
+    }
+
+    function updateRunnerSummary() {
+      document.getElementById('runner-count').textContent = String(runningRunnerRows.length);
+      const loaded = runningRunnerRows.filter(row => {
+        const item = runnerLogCache.get(runnerKey(row));
+        return item && !item.loading && item.details && !item.error;
+      }).length;
+      document.getElementById('runner-logs-count').textContent = String(loaded);
+    }
+
+    function getRunnerCopyText(row) {
+      const key = runnerKey(row);
+      const d = runnerLogCache.get(key)?.details || {};
+      const r = row.run;
+      return [
+        '==========================================',
+        'GITHUB RUNNER / RDP SESSION',
+        '==========================================',
+        `Repository : ${row.repoSlug}`,
+        `Workflow   : ${r.name || r.display_title || 'GitHub Actions Run'}`,
+        `Run        : #${r.run_number ?? r.id}`,
+        `Branch     : ${r.head_branch || 'unknown'}`,
+        `Status     : ${r.status || 'unknown'}`,
+        `CPU        : ${d.cpu || 'Not found in logs'}`,
+        `Cores      : ${d.cores || 'Not found in logs'}`,
+        `RAM        : ${d.ram || 'Not found in logs'}`,
+        `Disk (C:)  : ${d.disk || 'Not found in logs'}`,
+        `OS         : ${d.os || 'Not found in logs'}`,
+        '------------------------------------------',
+        'RDP SESSION',
+        '------------------------------------------',
+        `Address    : ${d.address || 'Not found in logs'}`,
+        `Username   : ${d.username || 'Not found in logs'}`,
+        `Password   : ${d.password || 'Not found in logs'}`,
+        `Alive      : ${d.aliveLine || 'Not found in logs'}`,
+        `Run URL    : ${r.html_url || `https://github.com/${row.repoSlug}/actions/runs/${r.id}`}`,
+        '=========================================='
+      ].join('\n');
+    }
+
+    async function copyRunnerText(text, label = 'Text') {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(String(text));
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = String(text);
+          textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+          document.body.appendChild(textarea); textarea.select();
+          const ok = document.execCommand('copy'); textarea.remove();
+          if (!ok) throw new Error('Clipboard permission denied.');
+        }
+        toast(`✅ ${label} copied to clipboard.`, 'g');
+      } catch (error) {
+        toast(`❌ Copy failed: ${error.message}`, 'r');
+      }
+    }
+
+    async function handleRunnerCardAction(action, key, fieldArg = '') {
+      const row = runningRunnerRows.find(item => runnerKey(item) === key);
+      if (!row) { toast('This run is no longer active. Refresh the cards.', 'y'); return; }
+      const cache = runnerLogCache.get(key);
+      const details = cache?.details || {};
+      if (action === 'toggle-password') {
+        if (runnerRevealedPasswords.has(key)) runnerRevealedPasswords.delete(key);
+        else runnerRevealedPasswords.add(key);
+        renderRunningRunnerCards();
+      } else if (action === 'copy-field') {
+        const field = fieldArg;
+        const value = details[field] || '';
+        if (!value) { toast('No value found in logs to copy.', 'y'); return; }
+        await copyRunnerText(value, field === 'password' ? 'Password' : field);
+      } else if (action === 'copy-alive') {
+        if (details.aliveLine) await copyRunnerText(details.aliveLine, 'Status line');
+        else toast('No alive status line found in logs.', 'y');
+      } else if (action === 'copy-card') {
+        await copyRunnerText(getRunnerCopyText(row), 'Full runner info');
+      } else if (action === 'refresh-log') {
+        await fetchRunnerLog(row);
+      }
+    }
+
+    async function copyAllRunnerInfo() {
+      if (!runningRunnerRows.length) { toast('No running runner info available to copy.', 'y'); return; }
+      const text = runningRunnerRows.map(getRunnerCopyText).join('\n\n');
+      await copyRunnerText(text, 'All runner info');
+    }
+
+    // ── Tailscale Devices API ────────────────────────────────────
+    let tailscaleDevices = [];
+    let isFetchingTailscale = false;
+    let tailscaleFetchVersion = 0;
+    let tailscaleLastUpdated = null;
+
+    function isLocalDashboardProxy() {
+      return location.protocol.startsWith('http') &&
+        ['127.0.0.1', 'localhost'].includes(location.hostname) && location.port === '8765';
+    }
+
+    function isHostedHttpApp() {
+      return location.protocol.startsWith('http') && !isLocalDashboardProxy();
+    }
+
+    function tailscaleApiBase() {
+      // Local launcher uses its Python proxy; Vercel uses a same-origin serverless proxy.
+      if (isLocalDashboardProxy()) return '/tailscale-api';
+      if (isHostedHttpApp()) return '/api/tailscale';
+      return 'https://api.tailscale.com';
+    }
+
+    function tailscalePath(path) {
+      if (isHostedHttpApp()) return `${tailscaleApiBase()}?path=${encodeURIComponent(path)}`;
+      return `${tailscaleApiBase()}${path}`;
+    }
+
+    function tailnetValue() {
+      const value = String(state.tailscale?.tailnet || '-').trim();
+      return value || '-';
+    }
+
+    async function tailscaleFetch(path, options = {}) {
+      const token = state.tailscale?.token;
+      if (!token) throw new Error('Add a Tailscale API access token first.');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(isHostedHttpApp() ? { 'X-Dashboard-Key': getRunnerAccessKey() } : {}),
+        ...(options.headers || {})
+      };
+      let response;
+      try {
+        response = await fetch(tailscalePath(path), { ...options, headers, cache: 'no-store' });
+      } catch (error) {
+        const proxyHint = location.protocol === 'file:'
+          ? ' The browser may block direct Tailscale API access (CORS). Run run_dashboard.py and open http://127.0.0.1:8765 for the local proxy.'
+          : ' Check network access, or run the dashboard with run_dashboard.py to use its local API proxy.';
+        throw new Error(`Could not connect to Tailscale API.${proxyHint}`);
+      }
+      const text = response.status === 204 ? '' : await response.text();
+      let data = null;
+      if (text) {
+        try { data = JSON.parse(text); }
+        catch (_) { data = { message: text }; }
+      }
+      if (!response.ok) {
+        let message = data && typeof data.message === 'string' ? data.message : `Tailscale API request failed (HTTP ${response.status}).`;
+        if (response.status === 401 && data?.code === 'DASHBOARD_AUTH') message = 'Enter the correct Dashboard access key in Views → Running Runners before using the hosted Tailscale proxy.';
+        else if (response.status === 401) message = 'Tailscale rejected this token (401). Check that it is an API access token and has not expired.';
+        else if (response.status === 403) message = 'Tailscale denied this action (403). Listing needs devices:core:read; management actions need devices:core write permission.';
+        else if (response.status === 404) message = 'Tailnet or device not found (404). Check the Tailnet field; use - for the token default tailnet.';
+        throw new Error(message);
+      }
+      return data || {};
+    }
+
+    function setTailscaleStatus(message, type = 'muted') {
+      const element = document.getElementById('ts-connection-status');
+      element.textContent = message;
+      element.style.color = type === 'good' ? 'var(--green)' : type === 'bad' ? 'var(--red)' : type === 'warn' ? 'var(--yellow)' : 'var(--muted)';
+    }
+
+    function clearTailscaleView(message = 'Connect a Tailscale token to show your machines.') {
+      tailscaleDevices = [];
+      tailscaleLastUpdated = null;
+      document.getElementById('ts-tbody').innerHTML = `<tr><td colspan="5" class="ts-empty">${escapeHtml(message)}</td></tr>`;
+      document.getElementById('ts-count-all').textContent = '—';
+      document.getElementById('ts-count-online').textContent = '—';
+      document.getElementById('ts-count-offline').textContent = '—';
+      document.getElementById('ts-updated-label').textContent = 'Not loaded yet';
+    }
+
+    function isDeviceConnected(device) {
+      if (typeof device.connectedToControl === 'boolean') return device.connectedToControl;
+      if (typeof device.online === 'boolean') return device.online;
+      return false;
+    }
+
+    function deviceShortName(device) {
+      const raw = String(device.hostname || device.name || 'Unknown machine');
+      return raw.split('.')[0] || raw;
+    }
+
+    function formatOs(value) {
+      if (!value) return 'OS not reported';
+      const known = { windows: 'Windows', linux: 'Linux', macos: 'macOS', ios: 'iOS', android: 'Android', tvos: 'tvOS', freebsd: 'FreeBSD', openbsd: 'OpenBSD' };
+      return known[String(value).toLowerCase()] || String(value);
+    }
+
+    function formatDateTime(value) {
+      const timestamp = new Date(value || '').getTime();
+      if (!Number.isFinite(timestamp)) return '—';
+      return new Date(timestamp).toLocaleString();
+    }
+
+    function renderTailscaleDevices() {
+      const body = document.getElementById('ts-tbody');
+      const query = document.getElementById('ts-search').value.trim().toLowerCase();
+      const filter = document.getElementById('ts-filter').value;
+      const filtered = tailscaleDevices.filter(device => {
+        const searchable = [device.name, device.hostname, device.user, device.clientVersion, device.os, ...(device.addresses || []), ...(device.tags || [])].join(' ').toLowerCase();
+        if (query && !searchable.includes(query)) return false;
+        if (filter === 'connected' && !isDeviceConnected(device)) return false;
+        if (filter === 'offline' && isDeviceConnected(device)) return false;
+        if (filter === 'key-expiry-disabled' && !device.keyExpiryDisabled) return false;
+        if (filter === 'needs-approval' && device.authorized !== false) return false;
+        return true;
+      });
+
+      document.getElementById('ts-count-all').textContent = String(tailscaleDevices.length);
+      document.getElementById('ts-count-online').textContent = String(tailscaleDevices.filter(isDeviceConnected).length);
+      document.getElementById('ts-count-offline').textContent = String(tailscaleDevices.filter(device => !isDeviceConnected(device)).length);
+      document.getElementById('ts-updated-label').textContent = tailscaleLastUpdated ? `Updated ${tailscaleLastUpdated.toLocaleTimeString()}` : 'Not loaded yet';
+
+      if (!filtered.length) {
+        body.innerHTML = `<tr><td colspan="5" class="ts-empty">${tailscaleDevices.length ? 'No machines match this search/filter.' : 'No machines found in this tailnet.'}</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = filtered.map(device => {
+        const id = String(device.id || device.nodeId || '');
+        const safeId = escapeHtml(id);
+        const name = deviceShortName(device);
+        const addresses = Array.isArray(device.addresses) ? device.addresses : [];
+        const ips = addresses.length ? addresses.map(address => `<span>${escapeHtml(address)}</span>`).join('') : '<span>—</span>';
+        const connected = isDeviceConnected(device);
+        const statusHtml = connected
+          ? '<span class="badge bg"><span class="bd"></span>Connected</span>'
+          : `<span class="badge bm"><span class="bd"></span>${device.lastSeen ? `Seen ${escapeHtml(timeAgo(device.lastSeen))}` : 'Not connected'}</span>`;
+        const version = device.clientVersion || 'Version unavailable';
+        const os = formatOs(device.os);
+        const user = device.user || (device.name && device.name.includes('.') ? device.name : '');
+        const expiryLabel = device.keyExpiryDisabled ? 'Enable key expiry' : 'Disable key expiry';
+        const tagsText = Array.isArray(device.tags) && device.tags.length ? device.tags.join(', ') : '';
+        return `<tr data-ts-row="${safeId}">
+          <td><div class="ts-device-name">${escapeHtml(name)}</div><div class="ts-subtext">${escapeHtml(user)}</div>${device.authorized === false ? '<div class="ts-subtext" style="color:var(--yellow)">Needs approval</div>' : ''}</td>
+          <td><div class="ts-ip-list">${ips}</div></td>
+          <td><div class="ts-version">${escapeHtml(version)}</div><div class="ts-subtext">${escapeHtml(os)}</div></td>
+          <td><div class="ts-status">${statusHtml}</div><div class="ts-subtext">${device.lastSeen && !connected ? `Last seen ${escapeHtml(formatDateTime(device.lastSeen))}` : (device.keyExpiryDisabled ? 'Key expiry disabled' : (device.expires ? `Key expires ${escapeHtml(formatDateTime(device.expires))}` : ''))}</div></td>
+          <td><details class="ts-menu"><summary aria-label="Actions for ${escapeHtml(name)}" title="Actions">•••</summary><div class="ts-menu-pop">
+            <button type="button" data-ts-action="rename" data-id="${safeId}">Edit machine name…</button>
+            <button type="button" data-ts-action="ip" data-id="${safeId}">Edit machine IPv4…</button>
+            <button type="button" data-ts-action="share" data-id="${safeId}">Share…</button>
+            <button type="button" data-ts-action="expiry" data-id="${safeId}">${escapeHtml(expiryLabel)}</button>
+            <button type="button" data-ts-action="activity" data-id="${safeId}">View recent activity</button>
+            <button type="button" data-ts-action="routes" data-id="${safeId}">Edit route settings…</button>
+            <button type="button" data-ts-action="tags" data-id="${safeId}">Edit ACL tags…</button>
+            <button type="button" class="danger" data-ts-action="remove" data-id="${safeId}">Remove…</button>
+          </div></details></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function fetchTailscaleDevices({ silent = false } = {}) {
+      if (!state.tailscale?.token) {
+        if (!silent) setTailscaleStatus('Enter your Tailscale API access token and select the correct tailnet.', 'warn');
+        clearTailscaleView();
+        return;
+      }
+      if (isFetchingTailscale) return;
+      const thisFetch = ++tailscaleFetchVersion;
+      isFetchingTailscale = true;
+      const refreshButton = document.getElementById('btn-ts-refresh');
+      refreshButton.disabled = true;
+      if (!silent) setTailscaleStatus('Loading machines from Tailscale…');
+      try {
+        const tailnet = encodeURIComponent(tailnetValue());
+        const data = await tailscaleFetch(`/api/v2/tailnet/${tailnet}/devices`);
+        if (thisFetch !== tailscaleFetchVersion) return;
+        tailscaleDevices = Array.isArray(data.devices) ? data.devices : [];
+        tailscaleLastUpdated = new Date();
+        renderTailscaleDevices();
+        setTailscaleStatus(`Connected to Tailscale · ${tailscaleDevices.length} machine(s) loaded. Auto-refresh every ${clampInterval(state.settings.interval)} seconds.`, 'good');
+      } catch (error) {
+        if (thisFetch !== tailscaleFetchVersion) return;
+        setTailscaleStatus(error.message, 'bad');
+        if (!tailscaleDevices.length) {
+          document.getElementById('ts-tbody').innerHTML = `<tr><td colspan="5" class="ts-empty">${escapeHtml(error.message)}</td></tr>`;
+        }
+        if (!silent) toast(`❌ Tailscale: ${error.message}`, 'r');
+      } finally {
+        if (thisFetch === tailscaleFetchVersion) {
+          isFetchingTailscale = false;
+          refreshButton.disabled = false;
+        }
+      }
+    }
+
+    function saveTailscaleConnection() {
+      const token = document.getElementById('ts-token').value.trim();
+      const tailnet = document.getElementById('ts-tailnet').value.trim() || '-';
+      if (!token) { setTailscaleStatus('Tailscale API access token is required.', 'bad'); toast('❌ Enter a Tailscale token.', 'r'); return; }
+      if (/\s/.test(tailnet)) { setTailscaleStatus('Tailnet cannot contain spaces. Use - or the tailnet name/ID.', 'bad'); return; }
+      const old = state.tailscale;
+      tailscaleFetchVersion += 1;
+      isFetchingTailscale = false;
+      document.getElementById('btn-ts-refresh').disabled = false;
+      state.tailscale = { token, tailnet };
+      if (!saveState()) { state.tailscale = old; return; }
+      setTailscaleStatus('Token saved in this browser. Checking access…');
+      fetchTailscaleDevices();
+      startTimer();
+    }
+
+    function forgetTailscaleToken() {
+      if (!confirm('Forget the Tailscale token in this browser? This will not revoke the token in Tailscale.')) return;
+      const previous = state.tailscale;
+      tailscaleFetchVersion += 1;
+      isFetchingTailscale = false;
+      document.getElementById('btn-ts-refresh').disabled = false;
+      state.tailscale = { token: '', tailnet: '-' };
+      if (!saveState()) { state.tailscale = previous; return; }
+      document.getElementById('ts-token').value = '';
+      document.getElementById('ts-tailnet').value = '-';
+      clearTailscaleView('Tailscale token removed from this browser.');
+      setTailscaleStatus('Tailscale token forgotten. This does not revoke it at Tailscale.', 'muted');
+      toast('Tailscale token removed from this browser.', 'g');
+    }
+
+    function getTailscaleDevice(id) {
+      return tailscaleDevices.find(device => String(device.id || device.nodeId || '') === String(id));
+    }
+
+    async function tailscaleDeviceMutation(device, actionPath, body, successMessage) {
+      if (!device) throw new Error('Machine not found in the latest device list. Refresh and try again.');
+      const id = encodeURIComponent(String(device.id || device.nodeId || ''));
+      await tailscaleFetch(`/api/v2/device/${id}${actionPath}`, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      toast(`✅ ${successMessage}`, 'g');
+      await fetchTailscaleDevices({ silent: true });
+    }
+
+    async function handleTailscaleAction(action, id) {
+      const device = getTailscaleDevice(id);
+      if (!device) { toast('❌ Machine not found. Refresh the list.', 'r'); return; }
+      const deviceName = deviceShortName(device);
+      const encodedId = encodeURIComponent(String(device.id || device.nodeId || ''));
+      const adminUrl = 'https://console.tailscale.com/admin/machines';
+
+      if (action === 'rename') {
+        const newName = prompt('New machine name:', deviceShortName(device));
+        if (newName === null) return;
+        const trimmed = newName.trim();
+        if (!trimmed || /\s/.test(trimmed) || trimmed.includes('/')) { toast('❌ Use a non-empty machine name without spaces or slashes.', 'r'); return; }
+        await tailscaleDeviceMutation(device, '/name', { name: trimmed }, 'Machine name updated.');
+      } else if (action === 'ip') {
+        const oldIpv4 = (device.addresses || []).find(address => /^\d{1,3}(?:\.\d{1,3}){3}$/.test(address)) || '';
+        const ipv4 = prompt('New Tailscale IPv4 address (this can interrupt connections):', oldIpv4);
+        if (ipv4 === null) return;
+        const value = ipv4.trim();
+        const parts = value.split('.');
+        if (parts.length !== 4 || parts.some(part => !/^\d{1,3}$/.test(part) || Number(part) > 255)) { toast('❌ Enter a valid IPv4 address.', 'r'); return; }
+        if (!confirm(`Change ${deviceName}'s Tailscale IPv4 address to ${value}? Existing connections may break.`)) return;
+        await tailscaleDeviceMutation(device, '/ip', { ipv4: value }, 'Machine IPv4 address updated.');
+      } else if (action === 'expiry') {
+        const nextValue = !Boolean(device.keyExpiryDisabled);
+        const verb = nextValue ? 'disable' : 'enable';
+        if (!confirm(`${verb[0].toUpperCase() + verb.slice(1)} key expiry for ${deviceName}?`)) return;
+        await tailscaleDeviceMutation(device, '/key', { keyExpiryDisabled: nextValue }, `Key expiry ${nextValue ? 'disabled' : 'enabled'}.`);
+      } else if (action === 'tags') {
+        const current = Array.isArray(device.tags) ? device.tags.join(', ') : '';
+        const raw = prompt('ACL tags (comma-separated, e.g. tag:server, tag:prod):', current);
+        if (raw === null) return;
+        const tags = raw.split(',').map(tag => tag.trim()).filter(Boolean);
+        if (tags.some(tag => !/^tag:[a-zA-Z0-9:_-]+$/.test(tag))) { toast('❌ Tags must use the tag:name format.', 'r'); return; }
+        if (!confirm(`Replace ACL tags for ${deviceName} with ${tags.length ? tags.join(', ') : '(none)'}?`)) return;
+        await tailscaleDeviceMutation(device, '/tags', { tags }, 'ACL tags updated.');
+      } else if (action === 'routes') {
+        const current = await tailscaleFetch(`/api/v2/device/${encodedId}/routes`);
+        const initial = Array.isArray(current.enabledRoutes) ? current.enabledRoutes.join(', ') : '';
+        const raw = prompt('Enabled routes (comma-separated, limited to routes advertised by this device):', initial);
+        if (raw === null) return;
+        const routes = raw.split(',').map(route => route.trim()).filter(Boolean);
+        if (!confirm(`Update enabled routes for ${deviceName} to ${routes.length ? routes.join(', ') : '(none)'}?`)) return;
+        await tailscaleDeviceMutation(device, '/routes', { routes }, 'Route settings updated.');
+      } else if (action === 'remove') {
+        const typed = prompt(`This permanently removes the machine from your tailnet. Type its name to confirm: ${deviceName}`);
+        if (typed !== deviceName) { if (typed !== null) toast('Removal cancelled: name did not match.', 'y'); return; }
+        await tailscaleFetch(`/api/v2/device/${encodedId}`, { method: 'DELETE' });
+        toast('✅ Machine removed from the tailnet.', 'g');
+        await fetchTailscaleDevices({ silent: true });
+      } else if (action === 'share') {
+        window.open(adminUrl, '_blank', 'noopener,noreferrer');
+        toast('Opened Tailscale Admin Machines. Select this machine there to use Share.', 'i');
+      } else if (action === 'activity') {
+        window.open('https://console.tailscale.com/admin', '_blank', 'noopener,noreferrer');
+        toast('Opened Tailscale Admin. Choose Logs to view recent activity.', 'i');
+      }
+    }
+
+    function exportTailscaleCsv() {
+      if (!tailscaleDevices.length) { toast('No Tailscale devices to export.', 'y'); return; }
+      const fields = ['name', 'hostname', 'user', 'addresses', 'clientVersion', 'os', 'connectedToControl', 'lastSeen', 'keyExpiryDisabled', 'expires', 'authorized', 'tags'];
+      const cell = value => {
+        const text = Array.isArray(value) ? value.join('; ') : (value === null || value === undefined ? '' : String(value));
+        return `"${text.replace(/"/g, '""')}"`;
+      };
+      const csv = [fields.join(','), ...tailscaleDevices.map(device => fields.map(field => cell(device[field])).join(','))].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tailscale-machines-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // ── Settings ─────────────────────────────────────────────────
+    function showSettings() {
+      document.getElementById('set-interval').value = clampInterval(state.settings.interval);
+      openModal('settings-modal');
+    }
+
+    function saveSettings() {
+      const input = document.getElementById('set-interval');
+      if (input.value.trim() === '' || !Number.isFinite(Number(input.value))) {
+        toast('❌ Enter a refresh interval from 5 to 300 seconds.', 'r');
+        input.focus();
+        return;
+      }
+      const supplied = Number(input.value);
+      if (!Number.isInteger(supplied) || supplied < MIN_INTERVAL || supplied > MAX_INTERVAL) {
+        toast('❌ Refresh interval must be a whole number from 5 to 300.', 'r');
+        input.focus();
+        return;
+      }
+      const previous = state.settings.interval;
+      state.settings.interval = supplied;
+      if (!saveState()) { state.settings.interval = previous; return; }
+      closeModal('settings-modal');
+      startTimer();
+      toast('✅ Settings saved.', 'g');
+    }
+
+    function clearAll() {
+      if (!confirm('Clear ALL dashboard data from this browser (GitHub and Tailscale tokens, repositories, and settings)? This does not revoke tokens at either service.')) return;
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        stopTimer();
+        state = { tokens: {}, repos: [], activeRepo: null, settings: { interval: DEFAULT_INTERVAL }, tailscale: { token: '', tailnet: '-' } };
+        closeModal('settings-modal');
+        renderSidebar();
+        clearDashboard('All local data cleared. Add a repository to get started.');
+        document.getElementById('ts-tailnet').value = '-';
+        document.getElementById('ts-token').value = '';
+        clearTailscaleView('Tailscale token cleared.');
+        showAddRepo();
+        toast('✅ Dashboard data cleared from this browser.', 'g');
+      } catch (error) {
+        toast(`❌ Could not clear browser data: ${error.message}`, 'r');
+      }
+    }
+
+    // ── Auto-refresh timer ───────────────────────────────────────
+    function startTimer() {
+      stopTimer();
+      countdown = clampInterval(state.settings.interval);
+      document.getElementById('refresh-label').textContent = `Refresh in ${countdown}s`;
+      refreshTimer = setInterval(() => {
+        countdown -= 1;
+        if (countdown <= 0) {
+          countdown = clampInterval(state.settings.interval);
+          if (getActiveRepo()) fetchRuns();
+          if (state.tailscale && state.tailscale.token) fetchTailscaleDevices({ silent: true });
+          if (getRunnerAccessKey()) fetchRunningRunners({ silent: true });
+        }
+        document.getElementById('refresh-label').textContent = `Refresh in ${countdown}s`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function calcDur(start, end) {
+      const startMs = new Date(start).getTime();
+      const endMs = new Date(end).getTime();
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return '—';
+      const seconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      const remainder = seconds % 60;
+      if (minutes < 60) return `${minutes}m ${remainder}s`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours}h ${minutes % 60}m`;
+    }
+
+    function timeAgo(dateValue) {
+      const timestamp = new Date(dateValue).getTime();
+      if (!Number.isFinite(timestamp)) return '—';
+      const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+      if (seconds < 60) return `${seconds}s ago`;
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+      return `${Math.floor(seconds / 86400)}d ago`;
+    }
+
+    function toast(message, type = 'g') {
+      const element = document.getElementById('toast');
+      const color = type === 'g' ? 'var(--green)' : type === 'r' ? 'var(--red)' : type === 'y' ? 'var(--yellow)' : 'var(--accent)';
+      const dot = document.createElement('span');
+      dot.style.color = color;
+      dot.textContent = '●';
+      element.replaceChildren(dot, document.createTextNode(` ${String(message)}`));
+      element.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => element.classList.remove('show'), 4200);
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('show');
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove('show');
+    }
+
+    // ── Event wiring ─────────────────────────────────────────────
+    document.getElementById('header-add-repo').addEventListener('click', showAddRepo);
+    document.getElementById('sidebar-add-repo').addEventListener('click', showAddRepo);
+    document.getElementById('header-settings').addEventListener('click', showSettings);
+    document.getElementById('btn-start-run').addEventListener('click', startRun);
+    document.getElementById('btn-stop-all').addEventListener('click', stopAll);
+    document.getElementById('btn-restart-all').addEventListener('click', restartAll);
+    document.getElementById('btn-refresh').addEventListener('click', fetchRuns);
+    document.getElementById('btn-add-token').addEventListener('click', showAddToken);
+    document.getElementById('btn-save-repo').addEventListener('click', saveRepo);
+    document.getElementById('btn-verify-token').addEventListener('click', verifyTmToken);
+    document.getElementById('btn-save-token').addEventListener('click', saveToken);
+    document.getElementById('btn-save-settings').addEventListener('click', saveSettings);
+    document.getElementById('btn-clear-all').addEventListener('click', clearAll);
+    document.getElementById('btn-runner-load').addEventListener('click', () => {
+      const key = document.getElementById('runner-access-key').value.trim();
+      if (!key) { setRunnerStatus('Paste the access key configured in Vercel Environment Variables.', 'warn'); return; }
+      try { sessionStorage.setItem(RUNNER_ACCESS_KEY_SESSION, key); } catch (_) {}
+      fetchRunningRunners({ forceLogs: true });
     });
-    if (res.status === 204) { toast('✅ New run started!', 'g'); setTimeout(fetchRuns, 2000); }
-    else throw new Error(`HTTP ${res.status}`);
-  } catch(e) { toast('❌ ' + e.message, 'r'); }
-}
+    document.getElementById('btn-runner-refresh').addEventListener('click', () => fetchRunningRunners({ forceLogs: true }));
+    document.getElementById('btn-runner-copy-all').addEventListener('click', copyAllRunnerInfo);
+    document.getElementById('btn-runner-forget-key').addEventListener('click', () => {
+      try { sessionStorage.removeItem(RUNNER_ACCESS_KEY_SESSION); } catch (_) {}
+      document.getElementById('runner-access-key').value = '';
+      runningRunnerRows = [];
+      runnerLogCache.clear();
+      runnerRevealedPasswords.clear();
+      renderRunningRunnerCards();
+      setRunnerStatus('Dashboard access key removed from this browser session.', 'muted');
+    });
+    document.getElementById('runner-access-key').addEventListener('keydown', event => {
+      if (event.key === 'Enter') document.getElementById('btn-runner-load').click();
+    });
+    document.getElementById('runner-search').addEventListener('input', renderRunningRunnerCards);
+    document.getElementById('btn-runner-clear-search').addEventListener('click', () => {
+      document.getElementById('runner-search').value = '';
+      renderRunningRunnerCards();
+    });
+    document.getElementById('runner-grid').addEventListener('click', async event => {
+      const button = event.target.closest('[data-runner-action]');
+      if (!button) return;
+      const { runnerAction, key, field } = button.dataset;
+      button.disabled = true;
+      try { await handleRunnerCardAction(runnerAction, key, field); }
+      finally { if (button.isConnected) button.disabled = false; }
+    });
 
-async function cancelRun(id) {
-  const repo = getActiveRepo();
-  try {
-    await fetch(`${GH}/repos/${repo.repo}/actions/runs/${id}/cancel`, { method: 'POST', headers: hdrs(repo.tokenId) });
-    toast('✅ Cancelled', 'g'); setTimeout(fetchRuns, 1500);
-  } catch(e) { toast('❌ ' + e.message, 'r'); }
-}
+    document.getElementById('btn-ts-connect').addEventListener('click', saveTailscaleConnection);
+    document.getElementById('btn-ts-refresh').addEventListener('click', () => fetchTailscaleDevices());
+    document.getElementById('btn-ts-clear').addEventListener('click', forgetTailscaleToken);
+    document.getElementById('btn-ts-export').addEventListener('click', exportTailscaleCsv);
+    document.getElementById('ts-search').addEventListener('input', renderTailscaleDevices);
+    document.getElementById('ts-filter').addEventListener('change', renderTailscaleDevices);
+    document.getElementById('ts-tbody').addEventListener('click', async event => {
+      const button = event.target.closest('[data-ts-action]');
+      if (!button) return;
+      const menu = button.closest('details');
+      if (menu) menu.open = false;
+      button.disabled = true;
+      try {
+        await handleTailscaleAction(button.dataset.tsAction, button.dataset.id);
+      } catch (error) {
+        toast(`❌ Tailscale action failed: ${error.message}`, 'r');
+      } finally {
+        if (button.isConnected) button.disabled = false;
+      }
+    });
 
-async function rerunThis(id) {
-  const repo = getActiveRepo();
-  try {
-    await fetch(`${GH}/repos/${repo.repo}/actions/runs/${id}/rerun`, { method: 'POST', headers: hdrs(repo.tokenId) });
-    toast('✅ Re-running...', 'g'); setTimeout(fetchRuns, 2000);
-  } catch(e) { toast('❌ ' + e.message, 'r'); }
-}
+    document.querySelectorAll('[data-close-modal]').forEach(button => {
+      button.addEventListener('click', () => closeModal(button.dataset.closeModal));
+    });
 
-async function stopAll() {
-  const repo = getActiveRepo();
-  if (!confirm('Stop all running workflows?')) return;
-  try {
-    const [r1, r2] = await Promise.all([
-      fetch(`${GH}/repos/${repo.repo}/actions/runs?status=in_progress&per_page=20`, { headers: hdrs(repo.tokenId) }),
-      fetch(`${GH}/repos/${repo.repo}/actions/runs?status=queued&per_page=20`,      { headers: hdrs(repo.tokenId) }),
-    ]);
-    const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-    const runs = [...(d1.workflow_runs||[]), ...(d2.workflow_runs||[])];
-    await Promise.all(runs.map(r => cancelRun(r.id)));
-    toast(`✅ Stopped ${runs.length} run(s)`, 'g');
-  } catch(e) { toast('❌ ' + e.message, 'r'); }
-}
+    document.querySelectorAll('.overlay').forEach(overlay => {
+      overlay.addEventListener('click', event => {
+        if (event.target === overlay) closeModal(overlay.id);
+      });
+    });
 
-async function restartAll() { await stopAll(); setTimeout(startRun, 3000); }
+    document.querySelectorAll('[data-tab]').forEach(button => {
+      button.addEventListener('click', () => switchTab(button.dataset.tab));
+    });
 
-// ── Tabs ─────────────────────────────────────────────────────
-function switchTab(name) {
-  ['dashboard','tokens'].forEach(t => {
-    const el = document.getElementById('tab-'+t);
-    if (el) el.style.display = t===name ? 'flex' : 'none';
-    if (el && t===name) el.style.flexDirection = 'column';
-  });
-  if (name === 'tokens') { renderTokenList(); renderRepoConfigList(); }
-}
+    document.getElementById('repo-list').addEventListener('click', event => {
+      const button = event.target.closest('[data-repo-id]');
+      if (button) selectRepo(button.dataset.repoId);
+    });
 
-// ── Settings ─────────────────────────────────────────────────
-function showSettings() {
-  document.getElementById('set-interval').value = state.settings.interval || 15;
-  document.getElementById('settings-modal').classList.add('show');
-}
-function saveSettings() {
-  state.settings.interval = parseInt(document.getElementById('set-interval').value) || 15;
-  saveState(); closeModal('settings-modal'); startTimer(); toast('✅ Settings saved', 'g');
-}
-function clearAll() {
-  if (!confirm('Clear ALL data (tokens, repos, settings)?')) return;
-  localStorage.removeItem('gha-dashboard'); location.reload();
-}
+    document.getElementById('tbody').addEventListener('click', async event => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const id = button.dataset.id;
+      if (!id) return;
+      button.disabled = true;
+      try {
+        if (button.dataset.action === 'cancel-run') await cancelRun(id);
+        else if (button.dataset.action === 'rerun-run') await rerunThis(id);
+      } catch (_) {
+        // cancelRun already displays the API error; absorb it here to avoid an unhandled rejection.
+      } finally {
+        if (button.isConnected) button.disabled = false;
+      }
+    });
 
-// ── Timer ────────────────────────────────────────────────────
-function startTimer() {
-  if (refreshTimer) clearInterval(refreshTimer);
-  countdown = state.settings.interval || 15;
-  refreshTimer = setInterval(() => {
-    countdown--;
-    document.getElementById('refresh-label').textContent = `Refresh in ${countdown}s`;
-    if (countdown <= 0) { countdown = state.settings.interval || 15; fetchRuns(); }
-  }, 1000);
-}
+    document.getElementById('token-list').addEventListener('click', event => {
+      const button = event.target.closest('[data-action="delete-token"]');
+      if (button) deleteToken(button.dataset.id);
+    });
 
-// ── Helpers ──────────────────────────────────────────────────
-function calcDur(s, e) {
-  const sec = Math.floor((new Date(e)-new Date(s))/1000);
-  return sec < 60 ? sec+'s' : Math.floor(sec/60)+'m '+sec%60+'s';
-}
-function timeAgo(d) {
-  const s = Math.floor((Date.now()-new Date(d))/1000);
-  if (s<60) return s+'s ago';
-  if (s<3600) return Math.floor(s/60)+'m ago';
-  return Math.floor(s/3600)+'h ago';
-}
-function toast(msg, type='g') {
-  const el = document.getElementById('toast');
-  const c = type==='g'?'var(--green)':type==='r'?'var(--red)':'var(--accent)';
-  el.innerHTML = `<span style="color:${c}">●</span> ${msg}`;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 3200);
-}
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    document.getElementById('repo-config-list').addEventListener('click', event => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      if (button.dataset.action === 'edit-repo') editRepo(button.dataset.id);
+      if (button.dataset.action === 'delete-repo') deleteRepo(button.dataset.id);
+    });
 
-// Add nav buttons to sidebar dynamically (avoid duplication)
-document.addEventListener('DOMContentLoaded', () => {
-  // Add nav items
-  const sidebar = document.querySelector('.sidebar');
-  const navSection = document.createElement('div');
-  navSection.innerHTML = `
-    <div class="sl" style="margin-top:16px">Views</div>
-    <button class="nav active" id="nav-dash" onclick="switchTab('dashboard');setActiveNav(this)">📊 Dashboard</button>
-    <button class="nav" id="nav-tok" onclick="switchTab('tokens');setActiveNav(this)">🔑 Tokens & Repos</button>
-  `;
-  sidebar.insertBefore(navSection, sidebar.querySelector('[style*="margin-top:auto"]') || sidebar.lastChild);
-  loadState();
-});
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.overlay.show').forEach(overlay => closeModal(overlay.id));
+      }
+      if (event.key === 'Enter' && document.getElementById('repo-modal').classList.contains('show') && event.target.tagName === 'INPUT') saveRepo();
+    });
 
-function setActiveNav(btn) {
-  document.querySelectorAll('.nav').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-</script>
+    // Initialize only after all DOM elements and event handlers exist.
+    loadState();
+  </script>
 </body>
 </html>
