@@ -33,7 +33,7 @@ async function readLimitedBody(response, maxBytes) {
 
 /* ── PRIMARY: read rdp-status.json written by the workflow ───── */
 async function fetchStatusFile(owner, repo, runId, token, debug) {
-  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/rdp-status.json`;
+  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/rdp-status/${runId}.json`;
   let data;
   try { data = await githubJson(url, token); }
   catch (e) { debug.statusFileError = e.message; if (e.statusCode === 401 || e.statusCode === 403) throw e; return null; }

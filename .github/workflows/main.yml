@@ -5,7 +5,7 @@ on:
 
 permissions:
   actions: write
-  contents: write   # needed to push rdp-status.json
+  contents: write   # needed to push rdp-status/{runId}.json
 
 jobs:
   secure-rdp:
@@ -157,6 +157,9 @@ jobs:
           $os     = (Get-CimInstance Win32_OperatingSystem).Caption
 
           # ── Helper: push rdp-status.json to repo via GitHub API ────
+          # Each run writes its own file so concurrent runs don't conflict
+          $statusPath = "rdp-status/$env:GITHUB_RUN_ID.json"
+
           function Push-RdpStatus {
             param([int]$MinLeft, [string]$AliveAt)
             $apiBase = "https://api.github.com/repos/$env:REPO"
@@ -183,15 +186,14 @@ jobs:
             }
             $json = $payload | ConvertTo-Json -Compress
             $b64  = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($json))
-            # fetch current SHA (needed for update; null for first create)
             $existing = $null
-            try { $existing = Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Headers $hdrs -ErrorAction Stop } catch {}
+            try { $existing = Invoke-RestMethod "$apiBase/contents/$statusPath" -Headers $hdrs -ErrorAction Stop } catch {}
             $body = @{ message = "chore: rdp status update [skip ci]"; content = $b64 }
             if ($existing -and $existing.sha) { $body.sha = $existing.sha }
             try {
-              Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Method Put -Headers $hdrs `
+              Invoke-RestMethod "$apiBase/contents/$statusPath" -Method Put -Headers $hdrs `
                 -Body ($body | ConvertTo-Json) -ContentType "application/json" | Out-Null
-              Write-Host "[status] rdp-status.json pushed to repo"
+              Write-Host "[status] $statusPath pushed to repo"
             } catch {
               Write-Host "[status] push failed: $_"
             }
@@ -222,18 +224,17 @@ jobs:
             -Uri "https://api.github.com/repos/$env:REPO/actions/workflows/$env:WORKFLOW/dispatches" `
             -Method POST -Headers $hdrs2 -Body $body2 -ContentType "application/json"
 
-          # ── Mark session as ended ──────────────────────────────────
+          # ── Mark session as ended then delete the file ──────────────
           $apiBase = "https://api.github.com/repos/$env:REPO"
           $hdrs3   = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2022-11-28" }
           $existing = $null
-          try { $existing = Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Headers $hdrs3 -ErrorAction Stop } catch {}
+          try { $existing = Invoke-RestMethod "$apiBase/contents/$statusPath" -Headers $hdrs3 -ErrorAction Stop } catch {}
           if ($existing -and $existing.sha) {
-            $endPayload = [ordered]@{ runId = $env:GITHUB_RUN_ID; status = "ended"; updatedAt = (Get-Date -Format 'o') }
-            $b64end = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(($endPayload | ConvertTo-Json -Compress)))
             try {
-              Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Method Put -Headers $hdrs3 `
-                -Body (@{ message = "chore: rdp session ended [skip ci]"; content = $b64end; sha = $existing.sha } | ConvertTo-Json) `
+              Invoke-RestMethod "$apiBase/contents/$statusPath" -Method Delete -Headers $hdrs3 `
+                -Body (@{ message = "chore: rdp session ended [skip ci]"; sha = $existing.sha } | ConvertTo-Json) `
                 -ContentType "application/json" | Out-Null
-            } catch {}
+              Write-Host "[status] $statusPath deleted from repo"
+            } catch { Write-Host "[status] delete failed: $_" }
           }
           Write-Host "[+] New workflow triggered. This session ending."
