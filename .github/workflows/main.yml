@@ -5,6 +5,7 @@ on:
 
 permissions:
   actions: write
+  contents: write   # needed to push rdp-status.json
 
 jobs:
   secure-rdp:
@@ -146,27 +147,93 @@ jobs:
           Write-Host "=========================================="
           Write-Host ""
 
-          # 5 hours — self-triggers new run before GitHub's 6h limit kills it
+          # ── Collect system specs once ──────────────────────────────
+          $cpu    = Get-CimInstance Win32_Processor | Select-Object -First 1
+          $cpuName = $cpu.Name.Trim()
+          $cores  = "$($cpu.NumberOfCores) cores / $($cpu.NumberOfLogicalProcessors) threads"
+          $ramGB  = "$([math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 2)) GB"
+          $drv    = Get-PSDrive C | Select-Object Used, Free
+          $disk   = "$([math]::Round(($drv.Used+$drv.Free)/1GB,1)) GB total | $([math]::Round($drv.Used/1GB,1)) GB used | $([math]::Round($drv.Free/1GB,1)) GB free"
+          $os     = (Get-CimInstance Win32_OperatingSystem).Caption
+
+          # ── Helper: push rdp-status.json to repo via GitHub API ────
+          function Push-RdpStatus {
+            param([int]$MinLeft, [string]$AliveAt)
+            $apiBase = "https://api.github.com/repos/$env:REPO"
+            $hdrs    = @{
+              Authorization          = "Bearer $env:GITHUB_TOKEN"
+              Accept                 = "application/vnd.github+json"
+              "X-GitHub-Api-Version" = "2022-11-28"
+            }
+            $payload = [ordered]@{
+              runId      = $env:GITHUB_RUN_ID
+              runNumber  = $env:GITHUB_RUN_NUMBER
+              status     = "running"
+              address    = $env:TAILSCALE_IP
+              username   = "RDP"
+              password   = $env:RDP_PASS
+              cpu        = $cpuName
+              cores      = $cores
+              ram        = $ramGB
+              disk       = $disk
+              os         = $os
+              updatedAt  = (Get-Date -Format 'o')
+              aliveAt    = $AliveAt
+              restartingIn = $MinLeft
+            }
+            $json = $payload | ConvertTo-Json -Compress
+            $b64  = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($json))
+            # fetch current SHA (needed for update; null for first create)
+            $existing = $null
+            try { $existing = Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Headers $hdrs -ErrorAction Stop } catch {}
+            $body = @{ message = "chore: rdp status update [skip ci]"; content = $b64 }
+            if ($existing -and $existing.sha) { $body.sha = $existing.sha }
+            try {
+              Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Method Put -Headers $hdrs `
+                -Body ($body | ConvertTo-Json) -ContentType "application/json" | Out-Null
+              Write-Host "[status] rdp-status.json pushed to repo"
+            } catch {
+              Write-Host "[status] push failed: $_"
+            }
+          }
+
+          # ── Push initial status immediately ────────────────────────
           $deadline = (Get-Date).AddHours(5)
+          $minLeft  = [math]::Round(($deadline - (Get-Date)).TotalMinutes)
+          Push-RdpStatus -MinLeft $minLeft -AliveAt (Get-Date -Format 'o')
+
+          # ── Keep-alive loop: ping + push every 5 min ───────────────
           while ((Get-Date) -lt $deadline) {
-              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — RDP: $env:TAILSCALE_IP | restarting in $([math]::Round(($deadline - (Get-Date)).TotalMinutes)) min"
+              $minLeft = [math]::Round(($deadline - (Get-Date)).TotalMinutes)
+              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — RDP: $env:TAILSCALE_IP | restarting in $minLeft min"
+              Push-RdpStatus -MinLeft $minLeft -AliveAt (Get-Date -Format 'o')
               Start-Sleep -Seconds 300
           }
 
-          # Trigger new workflow run before this one exits
+          # ── Trigger new workflow run before this one exits ─────────
           Write-Host "[$(Get-Date -Format 'HH:mm:ss')] 5h reached — triggering new workflow run..."
-          $headers = @{
-              Authorization  = "Bearer $env:GITHUB_TOKEN"
-              Accept         = "application/vnd.github+json"
+          $hdrs2 = @{
+              Authorization          = "Bearer $env:GITHUB_TOKEN"
+              Accept                 = "application/vnd.github+json"
               "X-GitHub-Api-Version" = "2022-11-28"
           }
-          $body = @{ ref = $env:REF } | ConvertTo-Json
+          $body2 = @{ ref = $env:REF } | ConvertTo-Json
           Invoke-RestMethod `
             -Uri "https://api.github.com/repos/$env:REPO/actions/workflows/$env:WORKFLOW/dispatches" `
-            -Method POST `
-            -Headers $headers `
-            -Body $body `
-            -ContentType "application/json"
+            -Method POST -Headers $hdrs2 -Body $body2 -ContentType "application/json"
+
+          # ── Mark session as ended ──────────────────────────────────
+          $apiBase = "https://api.github.com/repos/$env:REPO"
+          $hdrs3   = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2022-11-28" }
+          $existing = $null
+          try { $existing = Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Headers $hdrs3 -ErrorAction Stop } catch {}
+          if ($existing -and $existing.sha) {
+            $endPayload = [ordered]@{ runId = $env:GITHUB_RUN_ID; status = "ended"; updatedAt = (Get-Date -Format 'o') }
+            $b64end = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(($endPayload | ConvertTo-Json -Compress)))
+            try {
+              Invoke-RestMethod "$apiBase/contents/rdp-status.json" -Method Put -Headers $hdrs3 `
+                -Body (@{ message = "chore: rdp session ended [skip ci]"; content = $b64end; sha = $existing.sha } | ConvertTo-Json) `
+                -ContentType "application/json" | Out-Null
+            } catch {}
+          }
           Write-Host "[+] New workflow triggered. This session ending."
-
-
