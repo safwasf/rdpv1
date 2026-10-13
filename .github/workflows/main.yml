@@ -146,11 +146,11 @@ jobs:
           Write-Host "=========================================="
           Write-Host ""
 
-          # Run for 5 hours (18000 seconds), then self-trigger new run
-          $deadline = (Get-Date).AddHours(5)
+          # TEST: 5 minutes — change to AddHours(5) after confirming it works
+          $deadline = (Get-Date).AddMinutes(5)
           while ((Get-Date) -lt $deadline) {
-              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — RDP: $env:TAILSCALE_IP | restarting in $([math]::Round(($deadline - (Get-Date)).TotalMinutes)) min"
-              Start-Sleep -Seconds 300
+              Write-Host "[$(Get-Date -Format 'HH:mm:ss')] alive — RDP: $env:TAILSCALE_IP | restarting in $([math]::Round(($deadline - (Get-Date)).TotalSeconds)) sec"
+              Start-Sleep -Seconds 30
           }
 
           # Trigger new workflow run before this one exits
